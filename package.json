@@ -2,10 +2,10 @@
   "name": "vijay-baskaran-portfolio",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://yours-viji.github.io/vijay-baskaran/",
+  "homepage": "https://yoursviji.github.io/vijay-baskaran/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Yours-Viji/vijay-baskaran.git"
+    "url": "git+https://github.com/YoursViji/vijay-baskaran.git"
   },
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0 --port 43217",
