@@ -1,7 +1,7 @@
 export const profile = {
   name: "Vijay Baskaran",
   headline:
-    "Head of Software Technologies @ Retailetics | AI/ML Developer | Mobile Systems & Scaled Engineering",
+    "Principal Staff Software Engineer @ Retailetics | Algorithmic AI Trader & Quantitative Developer | AI/ML Developer | Mobile Systems & Scaled Engineering",
   location: "Federal Territory of Kuala Lumpur, Malaysia",
   email: "yoursvijii@gmail.com",
   phones: [{ display: "+60 1151135376", href: "tel:+601151135376" }],
@@ -15,7 +15,7 @@ export const profile = {
 export const experience = [
   {
     company: "Retailetics SDN BHD",
-    title: "Head of Software Technologies",
+    title: "Principal Staff Software Engineer",
     location: "Kuala Lumpur, Malaysia",
     dates: "February 2021 – Present",
     href: "https://retailetics.com",
@@ -266,13 +266,17 @@ export const tanIntelligence = {
   company: "TAN Intelligence",
   role: "Founder",
   tag: "Independent venture",
-  title: "AI-powered forex trading indicator",
+  title: "Custom trading indicators",
   image: "/work/tan-intelligence.png",
+  intro:
+    "Proprietary custom trading indicators across commodities, FX, and crypto.",
   summary:
-    "TAN Intelligence is my own company. I am building an original Artificial Intelligence trading indicator for the forex market — founder work, not a second employer on the timeline.",
+    "End-to-End Quantitative Systems: Engineered and deployed proprietary algorithmic trading models and custom indicators across Commodities, FX, and Crypto, operating systematically for over 6 years.",
   body: [
-    "The product starts as an indicator: models that read FX structure and turn it into a clear, inspectable overlay a trader can actually use.",
-    "The longer system direction is indicator, then signals, then an automated bot with explicit risk controls. That is the build path — not a live book, AUM, or performance claim.",
+    "Automated Architecture & Telegram Pipelines: Built custom 5-minute and 15-minute signal engine pipelines integrated with Telegram alerts and low-latency automated execution AI-bots via REST and WebSockets.",
+    "Strategy & Market Structure: Developed rule-based frameworks applying Smart Money Concepts (SMC), liquidity sweeps, and dynamic position-sizing protocols to optimize risk-adjusted returns.",
+    "Execution & Backtesting Rigor: Automated multi-broker execution (TradingView, MetaTrader) using Python and Pine Script; backtested and forward-tested strategies to maintain a sub-5% maximum drawdown limit.",
+    "Top Skills: Quantitative Finance • Algorithmic Trading • Python • Pine Script • Automated Execution • API Integration (WebSockets/REST) • Risk Management",
   ],
 } as const;
 

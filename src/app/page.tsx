@@ -221,7 +221,7 @@ function TanIntelligence() {
           {tanIntelligence.company}
         </h2>
         <p className="mt-3 max-w-2xl text-zinc-400">
-          My own company — not a second job under Experience.
+          {tanIntelligence.intro}
         </p>
         <div className="mt-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
