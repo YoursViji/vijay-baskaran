@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
-import { ArrowUpRight, Mail, MapPin, Phone, Sparkles } from "lucide-react";
+import {
+  ArrowUpRight,
+  FileText,
+  Mail,
+  MapPin,
+  Phone,
+  Sparkles,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,9 +19,11 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { buttonVariants } from "@/components/ui/button";
+import { LinkedinMark } from "@/components/linkedin-mark";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
+  bring,
   certifications,
   education,
   experience,
@@ -56,7 +65,7 @@ function Hero() {
         <div className="relative">
           <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/8 px-3 py-1 text-xs font-medium tracking-wide text-cyan-200 uppercase">
             <Sparkles className="size-3.5" />
-            In-store retail software
+            {profile.kicker}
           </p>
           <h1 className="font-heading text-4xl leading-[1.05] tracking-tight text-zinc-50 sm:text-5xl lg:text-6xl">
             {profile.name}
@@ -64,16 +73,42 @@ function Hero() {
           <p className="mt-5 max-w-xl text-lg text-zinc-300 sm:text-xl">
             {profile.headline}
           </p>
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-zinc-400">
+            {profile.summary}
+          </p>
           <p className="mt-4 flex items-center gap-2 text-sm text-zinc-400">
             <MapPin className="size-4 text-cyan-300" />
             {profile.location}
           </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <a
+              href={profile.resumeHref}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(buttonVariants({ size: "lg" }), "h-11 px-4 text-sm")}
+            >
+              <FileText data-icon="inline-start" />
+              View resume
+            </a>
+            <a
+              href={profile.linkedin.href}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "h-11 border-white/15 bg-white/4 px-4 text-sm text-zinc-100"
+              )}
+            >
+              <LinkedinMark className="size-4" />
+              LinkedIn
+            </a>
+          </div>
         </div>
         <div className="relative">
           <div className="overflow-hidden rounded-2xl ring-1 ring-cyan-300/20 shadow-[0_0_80px_-24px_rgba(34,211,238,0.55)]">
             <Image
-              src={assetPath("/work/smart-trolley.png")}
-              alt="AI-infused smart trolley with scan-and-pay screen in a grocery aisle"
+              src={assetPath("/work/ai-agentic-orchestration.jpg")}
+              alt="Generative AI multi-agent orchestration dashboard with planner, researcher, and executor agents"
               width={1600}
               height={900}
               priority
@@ -81,9 +116,23 @@ function Hero() {
             />
           </div>
           <p className="mt-3 text-xs tracking-wide text-zinc-500 uppercase">
-            Domain showcase · not a headshot
+            Agentic systems · not a headshot
           </p>
         </div>
+      </div>
+      <div className="mx-auto grid max-w-6xl gap-3 px-4 pb-16 sm:grid-cols-2 sm:px-6 lg:grid-cols-5">
+        {bring.map((item) => (
+          <Card key={item.title} className="border-0 bg-[#101c26] ring-cyan-400/12">
+            <CardHeader className="gap-2">
+              <CardTitle className="text-sm tracking-wide text-cyan-100 uppercase">
+                {item.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-relaxed text-zinc-400">{item.copy}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </section>
   );
@@ -100,7 +149,7 @@ function Experience() {
         <div className="mt-8 space-y-6">
           {experience.map((role) => (
             <Card
-              key={role.company}
+              key={`${role.title}-${role.dates}`}
               className="border-0 bg-[#101c26] ring-cyan-400/15"
             >
               <CardHeader className="gap-3">
@@ -124,14 +173,12 @@ function Experience() {
                       )}
                     </CardDescription>
                   </div>
-                  {role.dates ? (
-                    <Badge
-                      variant="outline"
-                      className="border-cyan-400/30 bg-cyan-400/8 text-cyan-100"
-                    >
-                      {role.dates}
-                    </Badge>
-                  ) : null}
+                  <Badge
+                    variant="outline"
+                    className="border-cyan-400/30 bg-cyan-400/8 text-cyan-100"
+                  >
+                    {role.dates}
+                  </Badge>
                 </div>
                 <p className="text-sm text-zinc-400">{role.location}</p>
               </CardHeader>
@@ -160,12 +207,12 @@ function Work() {
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <SectionKicker>Featured work</SectionKicker>
         <h2 className="font-heading mt-3 max-w-2xl text-3xl tracking-tight text-zinc-50">
-          In-store systems, shopper apps, and the lite SDK
+          Agentic systems, RAG, vision, and edge inference
         </h2>
         <p className="mt-3 max-w-2xl text-zinc-400">
-          Product stories from the Retailetics work — kiosk, cart, recipes,
-          payments, wayfinding, ads, audit, voice, fleet ops, ezyList, and a
-          Flutter SDK for small vendors.
+          Production GenAI and computer-vision work from the Retailetics stack,
+          plus the in-store products those systems ship inside. Not extra
+          employers.
         </p>
         {workGroups.map((group) => (
           <div key={group.title} className="mt-12">
@@ -380,7 +427,7 @@ function Contact() {
           Based in Kuala Lumpur
         </h2>
         <p className="mt-3 max-w-xl text-zinc-400">
-          {profile.location}. Email and phone are on this page.
+          {profile.location}. Email, phone, and LinkedIn are on this page.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <a
@@ -403,6 +450,30 @@ function Contact() {
               {phone.display}
             </a>
           ))}
+          <a
+            href={profile.linkedin.href}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "h-11 border-white/15 bg-white/4 px-4 text-zinc-100"
+            )}
+          >
+            <LinkedinMark className="size-4" />
+            LinkedIn
+          </a>
+          <a
+            href={profile.resumeHref}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "h-11 border-white/15 bg-white/4 px-4 text-zinc-100"
+            )}
+          >
+            <FileText data-icon="inline-start" />
+            {profile.resumeLabel}
+          </a>
         </div>
         <div className="mt-8 space-y-2 text-sm text-zinc-500">
           <p>

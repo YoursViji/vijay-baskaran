@@ -7,7 +7,16 @@ export function SiteFooter() {
         <p>
           {profile.name} · {profile.company.legalName}
         </p>
-        <p>Kuala Lumpur · Retailetics · TAN Intelligence</p>
+        <p>
+          <a
+            href={profile.github.href}
+            className="text-zinc-400 underline-offset-4 hover:text-cyan-200 hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {profile.github.label}
+          </a>
+        </p>
       </div>
     </footer>
   );

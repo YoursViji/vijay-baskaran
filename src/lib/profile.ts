@@ -1,85 +1,168 @@
 export const profile = {
-  name: "Vijay Baskaran",
-  headline:
-    "Principal Staff Software Engineer @ Retailetics | Algorithmic AI Trader & Quantitative Developer | AI/ML Developer | Mobile Systems & Scaled Engineering",
+  name: "Vijay Baskar",
+  headline: "Principal AI Engineer | Lead GenAI & Agentic Systems Architect",
+  kicker: "Generative AI · Agentic systems · Edge vision",
+  summary:
+    "Principal AI & Systems Engineer with 13+ years architecting production Generative AI, real-time computer vision, agentic pipelines, and scalable enterprise platforms.",
   location: "Federal Territory of Kuala Lumpur, Malaysia",
   email: "yoursvijii@gmail.com",
+  phone: "+60 1151135376",
   phones: [{ display: "+60 1151135376", href: "tel:+601151135376" }],
   company: {
     name: "Retailetics",
     legalName: "Retailetics SDN BHD",
     href: "https://retailetics.com",
   },
+  resumeHref: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/VB_Resume.pdf`,
+  resumeLabel: "VB_Resume.pdf",
+  github: {
+    href: "https://github.com/YoursViji/vijay-baskaran",
+    label: "github.com/YoursViji/vijay-baskaran",
+  },
+  linkedin: {
+    href: "https://www.linkedin.com/in/vb1707/",
+    label: "linkedin.com/in/vb1707",
+  },
 } as const;
+
+export const bring = [
+  {
+    title: "Agentic",
+    copy: "Multi-agent orchestration with LangGraph, CrewAI, AutoGen, MCP, ReAct, and LLM routing with fallbacks, rate limits, and token budgeting.",
+  },
+  {
+    title: "RAG",
+    copy: "Advanced RAG: hybrid BM25 search, multi-query, cross-encoder rerank, and vector stores (Pinecone, Qdrant, Milvus, Weaviate, pgvector, FAISS).",
+  },
+  {
+    title: "CV / Edge",
+    copy: "Production vision and SLAM — YOLO v8/v10/v11, RT-DETR, Kimera-VIO, OpenCV — plus ONNX / TensorRT / TF Lite inference under 100ms on-device.",
+  },
+  {
+    title: "Quant / ML",
+    copy: "Time-series and deep-learning models for custom trading indicators, plus PyTorch, JAX, TensorFlow, XGBoost, LoRA/PEFT, and evals.",
+  },
+  {
+    title: "Infra",
+    copy: "FastAPI, Pydantic, Celery, Node.js, Spring Boot, WebSockets, AWS Bedrock / SageMaker, GCP Vertex AI, Databricks, Docker, and CI/CD for ML.",
+  },
+] as const;
 
 export const experience = [
   {
     company: "Retailetics SDN BHD",
-    title: "Principal Staff Software Engineer",
+    title: "Principal AI Engineer | Lead GenAI & Agentic Systems Architect",
     location: "Kuala Lumpur, Malaysia",
-    dates: "February 2021 – Present",
+    dates: "March 2023 – Present",
     href: "https://retailetics.com",
     summary:
-      "I lead software for Retailetics’ in-store stack — ezyCart, self-checkout kiosks, wayfinding, payments, staff tools, and shopper apps — so people skip the queue and stores still see what happens between the aisles.",
+      "Lead GenAI, agentic systems, and computer vision for Retailetics’ in-store stack — self-checkout, RAG assistants, and sub-100ms edge inference.",
     bullets: [
-    "Spearheaded Retailetics’ AI-infused self-checkout smart trolley (ezyCart): architecture, stakeholder design, and a real-time socket pipeline between IoT devices and the ezyCart Android app.",
-    "Shipped the self-checkout kiosk on the same stack — scan, bag on the trays, and pay without a cashier line.",
-    "Built an AI recipe system on ezyCart: as items go in, the cart suggests recipes by cuisine, plays the cooking video, and lets shoppers add missing products to the basket.",
-    "Integrated multiple payment gateways, including Tap to Pay and NFC, so checkout works on cart and kiosk.",
-    "Product finder: search a SKU and navigate to its location in the aisle.",
-    "In-aisle upselling and cross-selling through ads in the same cart system.",
-    "Stock auditing on the smart cart so the floor can count, scan, and flag gaps without a separate handheld round.",
-    "Voice Assist AI for customer queries, product facts, and promo info — hands-free help on the cart, in the same spirit as a phone assistant.",
-    "Monitoring and troubleshooting for every active cart and self-checkout station.",
-    "Delivered an AI-powered indoor navigation system that saved over $2M by removing thousands of Bluetooth beacons.",
-    "Flutter support-staff app and Android TV cart monitor, plus a Flutter SDK lite of ezyCart so small vendors can embed scan-and-pay in their own phone and tablet apps.",
-    "ezyList: shared shopping lists with friends and family, nearby stores with price and availability, navigate to the store, purchase in one scan, digital receipt, and member-only promos.",
-    "Lisa AI shopping assistant, machine-learning models across the line, automated merchant deploys, and split testing.",
+      "Architected agentic and computer-vision self-checkout (ezyCart) with RT-DETR, YOLO, and Kimera-VIO; ML indoor navigation saved over $2M by replacing thousands of Bluetooth beacons.",
+      "Shipped a GenAI/RAG shopping assistant and AI recipe generation with LangChain and LlamaIndex — cuisine suggestions, cooking video, and missing-item add-to-cart.",
+      "Built FastAPI and Spring Boot WebSocket IoT pipelines between devices and the ezyCart Android app for real-time sync.",
+      "Deployed ONNX and TensorFlow Lite on-device models with sub-100ms edge inference for checkout vision and on-cart assist.",
+    ],
+  },
+  {
+    company: "Retailetics SDN BHD",
+    title: "Senior Staff Software Engineer",
+    location: "Kuala Lumpur, Malaysia",
+    dates: "February 2021 – March 2023",
+    href: "https://retailetics.com",
+    summary:
+      "Led software for ezyCart, kiosks, wayfinding, staff tools, and shopper apps so people skip the queue and stores still see the aisle.",
+    bullets: [
+      "Spearheaded the AI-infused self-checkout smart trolley (ezyCart): architecture, stakeholder design, and a real-time socket pipeline between IoT devices and the ezyCart Android app.",
+      "Shipped the self-checkout kiosk on the same stack — scan, bag on the trays, and pay without a cashier line; integrated Tap to Pay and NFC.",
+      "Delivered ML-based indoor navigation and product finder; ran A/B and split testing across merchants.",
+      "Built a Flutter support-staff app, Android TV cart monitor, Flutter SDK lite, ezyList, stock audit, Voice Assist, and Lisa AI shopping assistant.",
     ],
   },
   {
     company: "Colan Infotech",
     title: "Senior Software Engineer",
-    location: "Chennai",
-    dates: null,
+    location: "Chennai, India",
+    dates: "November 2012 – February 2021",
     href: null,
     summary:
-      "Senior Software Engineer in Chennai, shipping Android, iOS, and Flutter apps plus the backends they talk to.",
+      "Shipped 20+ Android, iOS, and Flutter apps plus the backends and ML prototypes they talk to.",
     bullets: [
-      "Built and shipped 20+ Android/iOS and Flutter apps.",
-      "Worked native Kotlin/Java and Flutter across those products.",
-      "Set up CI/CD with Jenkins, GitLab, and Bitrise.",
-      "Built mobile backends on AWS, Firebase, and REST.",
+      "Delivered 20+ production mobile apps (Android/iOS): native Kotlin/Java and Flutter, with MVVM, Jetpack Compose, and CI/CD (Jenkins, GitLab, Bitrise); reduced ANR crashes by 70% and lifted app performance by 30%.",
+      "Architected scalable backends using Spring Boot, AWS, Firebase, and REST APIs — microservices for 500K+ users with 40% faster response time.",
+      "Built Python prototypes with TensorFlow, PyTorch, and Scikit-learn for on-device and backend ML experiments.",
     ],
   },
 ] as const;
 
 export const workGroups = [
   {
+    title: "AI systems",
+    intro:
+      "Agentic pipelines, RAG, computer vision / SLAM, and on-device inference from production retail work.",
+    items: [
+      {
+        slug: "agentic",
+        title: "Agentic orchestration",
+        image: "/work/ai-agentic-orchestration.jpg",
+        tag: "LangGraph · MCP",
+        copy: "Multi-agent graphs that plan, call tools, and fall back under rate limits — the same agentic pattern behind Lisa, voice assist, and in-aisle recipe flows.",
+      },
+      {
+        slug: "rag",
+        title: "RAG retrieval",
+        image: "/work/ai-rag-retrieval.jpg",
+        tag: "LangChain · LlamaIndex",
+        copy: "Hybrid search and rerank over product facts, promos, and recipes so the shopping assistant answers from store data instead of guessing.",
+      },
+      {
+        slug: "vision-slam",
+        title: "Vision & SLAM",
+        image: "/work/ai-vision-slam.jpg",
+        tag: "YOLO · RT-DETR · Kimera-VIO",
+        copy: "Real-time detection and visual odometry on the cart: find the SKU, walk the path, and skip the beacon grid that used to cost millions.",
+      },
+      {
+        slug: "edge",
+        title: "Edge inference",
+        image: "/work/ai-edge-inference.jpg",
+        tag: "ONNX · TF Lite",
+        copy: "Quantized models on kiosk and cart hardware with sub-100ms inference — checkout vision that does not wait on a round-trip.",
+      },
+    ],
+  },
+  {
     title: "In the store",
     intro:
-      "ezyCart, kiosks, recipes, payments, wayfinding, ads, audit, voice, and fleet ops — Retailetics product work.",
+      "ezyCart, kiosks, recipes, payments, wayfinding, and Lisa — Retailetics product work.",
     items: [
       {
         slug: "smart-trolley",
         title: "ezyCart smart trolley",
         image: "/work/smart-trolley.png",
         tag: "AI self-checkout",
-        copy: "Retailetics’ AI-infused self-checkout cart. Architecture, UX, and a live socket pipeline from IoT hardware into the ezyCart Android app — scan, pay, and skip the queue.",
+        copy: "Retailetics’ AI-infused self-checkout cart. Architecture, UX, and a live socket pipeline from IoT hardware into the ezyCart Android app.",
       },
       {
         slug: "self-checkout-kiosk",
         title: "Self-checkout kiosk",
         image: "/work/self-checkout-kiosk-hero.png",
         tag: "Station checkout",
-        copy: "The same scan-bag-pay flow on a fixed kiosk: trays, scale, and screen so shoppers who are not on a cart still leave without a cashier line.",
+        copy: "The same scan-bag-pay flow on a fixed kiosk so shoppers who are not on a cart still leave without a cashier line.",
       },
       {
         slug: "ai-recipe",
         title: "AI recipe builder",
         image: "/work/ai-recipe-builder.png",
-        tag: "ezyCart",
-        copy: "As products land in the cart, AI builds recipes from the basket, lists cuisines, plays the cooking video, and flags missing items so they can go straight into the cart.",
+        tag: "GenAI · RAG",
+        copy: "As products land in the cart, AI builds recipes from the basket, plays the cooking video, and flags missing items.",
+      },
+      {
+        slug: "lisa-ai",
+        title: "Lisa AI shopping assistant",
+        image: "/work/lisa-ai-assistant.png",
+        tag: "RAG assistant",
+        copy: "Lisa answers shopper questions and surfaces live product recommendations and promotions between the shelves.",
       },
       {
         slug: "payments",
@@ -94,41 +177,6 @@ export const workGroups = [
         image: "/work/product-finder.png",
         tag: "Search · navigate",
         copy: "Search a product and walk the path to the shelf. Indoor navigation that replaced thousands of beacons and saved over $2M.",
-      },
-      {
-        slug: "upsell-ads",
-        title: "Upsell & cross-sell ads",
-        image: "/work/upsell-cross-sell-ads.png",
-        tag: "In-aisle media",
-        copy: "The same cart system runs ads that upsell and cross-sell against what is already in the basket — while the shopper is still in the aisle.",
-      },
-      {
-        slug: "stock-audit",
-        title: "Stock auditing",
-        image: "/work/stock-auditing.png",
-        tag: "Smart cart",
-        copy: "Use the smart cart as an audit tool: scan the shelf, count, and flag gaps without sending a separate device around the store.",
-      },
-      {
-        slug: "voice-assist",
-        title: "Voice Assist AI",
-        image: "/work/voice-assist-ai.png",
-        tag: "Hands-free",
-        copy: "Voice assist for customer queries, product facts, and promo info — on-cart help in the same spirit as a phone assistant, without pulling out a phone.",
-      },
-      {
-        slug: "fleet-monitor",
-        title: "Cart & kiosk monitoring",
-        image: "/work/fleet-monitoring.png",
-        tag: "Ops",
-        copy: "A monitoring system to watch and troubleshoot every active cart and self-checkout station from one place.",
-      },
-      {
-        slug: "lisa-ai",
-        title: "Lisa AI shopping assistant",
-        image: "/work/lisa-ai-assistant.png",
-        tag: "In-aisle AI",
-        copy: "Lisa answers shopper questions and surfaces live product recommendations and promotions between the shelves.",
       },
     ],
   },
@@ -164,76 +212,116 @@ export const workGroups = [
 
 export const skillGroups = [
   {
-    title: "Mobile systems",
+    title: "Generative AI & Agentic",
     items: [
-      "Android",
+      "LangGraph",
+      "CrewAI",
+      "AutoGen",
+      "LangChain",
+      "LlamaIndex",
+      "LangSmith",
+      "Langflow",
+      "MCP",
+      "Multi-Agent Orchestration",
+      "ReAct",
+      "LLM abstraction (routing, fallbacks, rate limits, token budgeting)",
+      "n8n",
+    ],
+  },
+  {
+    title: "LLMs",
+    items: [
+      "GPT-4o",
+      "Claude",
+      "Gemini",
+      "Llama 3 / Mistral",
+      "FinGPT",
+      "Ollama",
+      "vLLM",
+      "Prompt Engineering",
+      "Evals",
+      "LoRA / PEFT",
+      "Hugging Face Transformers",
+    ],
+  },
+  {
+    title: "RAG",
+    items: [
+      "Advanced RAG",
+      "Hybrid Search BM25",
+      "Multi-query",
+      "Cross-encoder rerank",
+      "Pinecone",
+      "Qdrant",
+      "Milvus",
+      "Weaviate",
+      "pgvector",
+      "FAISS",
+      "Supabase",
+    ],
+  },
+  {
+    title: "CV / SLAM",
+    items: [
+      "YOLO v8/v10/v11",
+      "RT-DETR",
+      "Kimera-VIO",
+      "OpenCV",
+      "OCR",
+      "Detection / segmentation",
+    ],
+  },
+  {
+    title: "DL / ML",
+    items: [
+      "PyTorch",
+      "JAX",
+      "TensorFlow",
+      "Scikit-learn",
+      "XGBoost",
+      "NumPy",
+      "Pandas",
+      "Time-series",
+      "ONNX",
+      "TensorRT",
+      "TF Lite",
+    ],
+  },
+  {
+    title: "Backend",
+    items: [
+      "Python",
+      "FastAPI",
+      "Pydantic",
+      "Celery",
+      "Node.js",
+      "Spring Boot",
+      "REST",
+      "GraphQL",
+      "WebSockets",
+    ],
+  },
+  {
+    title: "MLOps",
+    items: [
+      "AWS Bedrock",
+      "SageMaker",
+      "GCP Vertex AI",
+      "Databricks",
+      "Langfuse",
+      "Docker",
+      "CI/CD for ML",
+    ],
+  },
+  {
+    title: "Mobile (supporting)",
+    items: [
       "Kotlin",
       "Java",
       "Jetpack Compose",
       "Flutter",
-      "Dart",
-      "Kotlin Multiplatform",
+      "Android",
       "iOS",
-    ],
-  },
-  {
-    title: "Backend & scale",
-    items: [
-      "REST APIs",
-      "GraphQL",
-      "WebSockets",
-      "Spring Boot",
-      "Postgres",
-      "SQLite",
-      "Microservices",
-    ],
-  },
-  {
-    title: "AI / ML",
-    items: [
-      "TensorFlow",
-      "PyTorch",
-      "Keras",
-      "OpenCV",
-      "On-device ML",
-      "NLP",
-      "Model quantization",
-    ],
-  },
-  {
-    title: "In-store systems",
-    items: [
-      "ezyCart",
-      "Self-checkout kiosk",
-      "AI recipe builder",
-      "NFC / Tap to Pay",
-      "Product finder",
-      "Voice assist",
-      "Stock audit",
-      "ezyList",
-      "Flutter SDK lite",
-    ],
-  },
-  {
-    title: "Delivery",
-    items: [
-      "Jenkins",
-      "Fastlane",
-      "Docker",
-      "Git",
-      "CI/CD",
-      "Split testing",
-    ],
-  },
-  {
-    title: "Engineering craft",
-    items: [
-      "SOLID",
-      "Clean Architecture",
-      "MVVM",
-      "MVP",
-      "BLoC",
-      "Technical leadership",
     ],
   },
 ] as const;
@@ -282,13 +370,13 @@ export const tanIntelligence = {
 
 export const goals = {
   shortTerm: {
-    title: "Mastering Artificial Intelligence technologies and Machine Learning",
-    ai: "I am taking the AI already in the store stack — vision, prompting, on-device inference — and going deeper on what is shipping now: agentic systems that plan and call tools, multimodal models that can read a chart with the surrounding text, edge ML that does not wait on a round-trip, retrieval-augmented generation for grounded research, and MLOps so an experiment can become a service.",
-    ml: "On Machine Learning, the work is practical: train, evaluate, and productionize models — data, metrics, and the path into a real runtime, not a notebook that never leaves the laptop.",
+    title: "Deepening production GenAI, agents, and MLOps",
+    ai: "Take the agentic, RAG, and vision systems already in the store stack further: tool-calling graphs, evals, retrieval quality, and MLOps so an experiment becomes a service.",
+    ml: "On Machine Learning, the work stays practical: train, evaluate, quantize, and serve — including on-device paths that do not wait on a round-trip.",
   },
   longTerm: {
     title: "Building a profitable AI/ML trading indicator and bot system",
-    copy: "The research-to-product path is sequential and forex-first: an original indicator, a signal layer that is honest about confidence, then a bot that can execute with hard risk limits. Profit is the product goal. It is not a track record.",
+    copy: "The research-to-product path is sequential: an original indicator, a signal layer that is honest about confidence, then a bot that can execute with hard risk limits. Profit is the product goal. It is not a track record.",
   },
 } as const;
 

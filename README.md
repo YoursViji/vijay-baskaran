@@ -1,10 +1,12 @@
-# Vijay Baskaran — portfolio
+# Vijay Baskar — portfolio
 
-Public portfolio for **Vijay Baskaran**, Head of Software Technologies at Retailetics SDN BHD. Dark in-store retail-tech presentation, plus an independent TAN Intelligence venture.
+Public resume and portfolio for **Vijay Baskar**, Principal AI Engineer | Lead GenAI & Agentic Systems Architect at Retailetics SDN BHD.
+
+Source: [github.com/YoursViji/vijay-baskaran](https://github.com/YoursViji/vijay-baskaran)
 
 **Live site:** [https://yoursviji.github.io/vijay-baskaran/](https://yoursviji.github.io/vijay-baskaran/)
 
-This is a second public site. The original remains at [yoursviji.github.io/vb-profile](https://yoursviji.github.io/vb-profile/).
+This identity is separate from [vb-profile](https://yoursviji.github.io/vb-profile/) (Vijay Baskaran Arjun Dev). Do not merge names.
 
 ## Run locally
 
@@ -14,31 +16,25 @@ Requires Node.js 20+.
 git clone https://github.com/YoursViji/vijay-baskaran.git
 cd vijay-baskaran
 npm install
-npm run dev
+NEXT_PUBLIC_BASE_PATH=/vijay-baskaran npm run dev
 ```
 
 The app listens on **http://127.0.0.1:43217**.
 
+```bash
+NEXT_PUBLIC_BASE_PATH=/vijay-baskaran npm run build
+```
+
 ## What is on the page
 
-- **Hero:** name Vijay Baskaran. No resume or LinkedIn buttons.
-- **Experience:** Retailetics SDN BHD (**February 2021 – Present**) and Colan Infotech (no dates).
-- **Featured work:** ezyCart, kiosk, recipe builder, payments, product finder, ads, audit, voice, fleet, Lisa, Flutter SDK, ezyList, staff app.
-- **TAN Intelligence:** independent company / founder work. No dates.
-- **Goals:** short-term AI/ML mastery; long-term indicator → signals → bot.
-- **Education:** B.E. Computer Science and Engineering, Anna University Chennai (no dates).
-- **Certifications:** Target Software, Coursera, IBM, Claude and Coursera (no dates).
-- **No profile picture.** No resume download.
-
-## Contact
-
-| Control | URL |
-| --- | --- |
-| Email | yoursvijii@gmail.com |
-| Phone | +60 1151135376 |
-| Live site | https://yoursviji.github.io/vijay-baskaran/ |
-| Retailetics | https://retailetics.com |
+- **Headline:** Principal AI Engineer | Lead GenAI & Agentic Systems Architect
+- **Hero:** LinkedIn About summary, What I Bring (Agentic, RAG, CV/Edge, Quant/ML, Infra), agentic-systems image (not a headshot)
+- **Experience:** Principal AI Engineer (Mar 2023–Present), Senior Staff Software Engineer (Feb 2021–Mar 2023), Senior Software Engineer at Colan Infotech (Nov 2012–Feb 2021)
+- **Work:** Agentic orchestration, RAG, vision/SLAM, edge inference, plus in-store Retailetics products
+- **TAN Intelligence:** independent quantitative trading / custom indicators (not a second employer)
+- **Resume:** [VB_Resume.pdf](public/VB_Resume.pdf) — ATS single-column PDF named **Vijay Baskar**
+- **LinkedIn:** https://www.linkedin.com/in/vb1707/
 
 ## Stack
 
-Next.js, TypeScript, Tailwind CSS, shadcn/ui.
+Next.js, TypeScript, Tailwind CSS, shadcn/ui. Static export to GitHub Pages.

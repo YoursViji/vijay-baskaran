@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { FileText, Menu, X } from "lucide-react";
 
-import { nav } from "@/lib/profile";
+import { buttonVariants } from "@/components/ui/button";
+import { LinkedinMark } from "@/components/linkedin-mark";
+import { nav, profile } from "@/lib/profile";
+import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -32,7 +35,7 @@ export function SiteHeader() {
               VB
             </span>
             <span className="hidden font-heading text-sm tracking-tight text-zinc-100 sm:block">
-              Vijay Baskaran
+              {profile.name}
             </span>
           </a>
 
@@ -52,6 +55,31 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <a
+              href={profile.linkedin.href}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon" }),
+                "text-zinc-300"
+              )}
+              aria-label="LinkedIn"
+            >
+              <LinkedinMark className="size-4" />
+            </a>
+            <a
+              href={profile.resumeHref}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(
+                buttonVariants({ size: "sm" }),
+                "hidden sm:inline-flex"
+              )}
+            >
+              <FileText data-icon="inline-start" />
+              Resume
+            </a>
+
             <button
               type="button"
               className="inline-flex size-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-zinc-100 lg:hidden"
@@ -90,6 +118,15 @@ export function SiteHeader() {
                 {item.label}
               </a>
             ))}
+            <a
+              href={profile.resumeHref}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 rounded-md bg-cyan-300 px-2 py-3 text-center text-base font-medium text-slate-950"
+              onClick={() => setOpen(false)}
+            >
+              View resume
+            </a>
           </nav>
         </div>
       ) : null}
