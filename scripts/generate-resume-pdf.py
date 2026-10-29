@@ -30,6 +30,7 @@ IDENTITIES = {
         "linkedin": "linkedin.com/in/vijay-baskaran-arjun-dev",
         "github": "github.com/YoursViji/vb-profile",
         "phones": "+91 8088413589 | +60 1151135376",
+        "place": "Bengaluru, India",
     },
     "baskar": {
         "name": "Vijay Baskar",
@@ -37,6 +38,7 @@ IDENTITIES = {
         "linkedin": "linkedin.com/in/vb1707",
         "github": "github.com/YoursViji/vijay-baskaran",
         "phones": "+91 8088413589 | +60 1151135376",
+        "place": "Bengaluru, India",
     },
 }
 
@@ -195,8 +197,8 @@ def story_for(person: dict):
         Paragraph(HEADLINE, s["head"]),
         Paragraph(
             f"{person['phones']} | yoursvijii@gmail.com<br/>"
-            f"{person['linkedin']} | {person['github']}<br/>"
-            "Federal Territory of Kuala Lumpur, Malaysia",
+            f"{person['linkedin']}<br/>"
+            f"{person['place']}",
             s["meta"],
         ),
         Paragraph("SUMMARY", s["h"]),

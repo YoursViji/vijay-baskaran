@@ -4,10 +4,14 @@ export const profile = {
   kicker: "Generative AI · Agentic systems · Edge vision",
   summary:
     "Principal AI & Systems Engineer with 13+ years architecting production Generative AI, real-time computer vision, agentic pipelines, and scalable enterprise platforms.",
-  location: "Federal Territory of Kuala Lumpur, Malaysia",
+  location: "Bengaluru, India",
+  onsite: "Malaysia onsite",
   email: "yoursvijii@gmail.com",
-  phone: "+60 1151135376",
-  phones: [{ display: "+60 1151135376", href: "tel:+601151135376" }],
+  phone: "+91 8088413589",
+  phones: [
+    { display: "+91 8088413589", href: "tel:+918088413589" },
+    { display: "+60 1151135376", href: "tel:+601151135376" },
+  ],
   company: {
     name: "Retailetics",
     legalName: "Retailetics SDN BHD",

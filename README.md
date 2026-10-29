@@ -32,8 +32,10 @@ NEXT_PUBLIC_BASE_PATH=/vijay-baskaran npm run build
 - **Experience:** Principal AI Engineer (Mar 2023–Present), Senior Staff Software Engineer (Feb 2021–Mar 2023), Senior Software Engineer at Colan Infotech (Nov 2012–Feb 2021)
 - **Work:** Agentic orchestration, RAG, vision/SLAM, edge inference, plus in-store Retailetics products
 - **TAN Intelligence:** independent quantitative trading / custom indicators (not a second employer)
+- **Location:** Bengaluru, India (current); Malaysia onsite. Resume header is Bengaluru only.
+- **Phones:** +91 8088413589 · +60 1151135376
 - **Resume:** [VB_Resume.pdf](public/VB_Resume.pdf) — ATS single-column PDF named **Vijay Baskar**
-- **LinkedIn:** https://www.linkedin.com/in/vb1707/
+- **LinkedIn:** https://www.linkedin.com/in/vb1707/ (this identity only)
 
 ## Stack
 

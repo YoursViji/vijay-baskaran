@@ -76,9 +76,11 @@ function Hero() {
           <p className="mt-4 max-w-xl text-base leading-relaxed text-zinc-400">
             {profile.summary}
           </p>
-          <p className="mt-4 flex items-center gap-2 text-sm text-zinc-400">
+          <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-400">
             <MapPin className="size-4 text-cyan-300" />
-            {profile.location}
+            <span>{profile.location}</span>
+            <span className="text-zinc-600">·</span>
+            <span>{profile.onsite}</span>
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a
@@ -423,11 +425,12 @@ function Contact() {
     <section id="contact" className="scroll-mt-28 border-t border-white/8">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <SectionKicker>Contact</SectionKicker>
-        <h2 className="font-heading mt-3 text-3xl tracking-tight text-zinc-50">
-          Based in Kuala Lumpur
+          <h2 className="font-heading mt-3 text-3xl tracking-tight text-zinc-50">
+          Based in Bengaluru
         </h2>
         <p className="mt-3 max-w-xl text-zinc-400">
-          {profile.location}. Email, phone, and LinkedIn are on this page.
+          Current location {profile.location}. Also {profile.onsite}. Email,
+          both phone numbers, and LinkedIn are on this page.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <a
