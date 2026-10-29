@@ -6,525 +6,525 @@ def add(q, kid, tech, *ex):
 
 # --- the 25 screenshot questions (must all appear) ---
 add("Design a RAG pipeline that handles 10 million documents.",
-    "Do not search the whole library every time. Index pages, shortlist, then read a handful.",
-    "Ingest with tenant/ACL/source/time metadata. Structure-aware chunk+embed. Hybrid BM25+dense, ANN shards, metadata filters at retrieval, multi-query, rerank to 5–8, generate with citations, abstain. Upserts/deletes, eval set, SLOs on recall@k, groundedness, p95, $/query.",
-    "Lisa/recipes over catalogue+policy — never dump 10M docs into the prompt.",
-    "Shopper ACL must not retrieve staff stock-audit chunks.")
+    "You never dump ten million documents into a prompt. You index them once, shortlist a few dozen candidates, then read a handful of the best chunks before the model writes. The librarian metaphor is the whole design: catalogue first, then retrieve, then quote.",
+    "At Retailetics I would treat a ten-million-document corpus as an ingest-and-retrieve system, not as a giant context window. Every document is ingested with tenant, ACL, source, and time metadata so later retrieval can filter before it ranks. Chunking is structure-aware rather than a naive token window, and each chunk is embedded and stored in sharded ANN indexes beside a BM25 inverted index. At query time we apply metadata filters, run hybrid BM25 plus dense retrieval, expand with multi-query if recall is weak, then rerank down to five to eight chunks. Generation must cite those chunks and abstain when evidence is thin. Upserts and deletes stay incremental, an evaluation set guards recall at k, groundedness, p95 latency, and dollars per query, and Lisa on recipes over catalogue and policy is the same pattern at store scale rather than a dump of the whole library.",
+    "On Lisa and the recipes RAG built with LangChain and LlamaIndex, we never stuffed the full catalogue into the prompt; we retrieved a few recipe and policy chunks and generated from those.",
+    "A shopper ACL must not retrieve staff stock-audit chunks, so tenant and permission filters run before hybrid search, not after generation.")
 add("Debug a RAG system that retrieves relevant context but generates wrong answers.",
-    "Right page, wrong sentence — fix writing, not only search.",
-    "Confirm retrieval@k first. Then prompt (cite/refuse), packing (lost-in-the-middle), contradictions, temperature, model ignoring context. Faithfulness eval. Log the exact window.",
-    "Recipe RAG retrieves ingredients then invents a SKU — constrain to retrieved rows.",
-    "Fail eval if Lisa cites a promo not in the chunk.")
+    "If the right page came back but the sentence is wrong, search is not the only patient. You inspect packing, prompting, contradictions, and whether the model actually used the evidence. Then you log the exact window the model saw.",
+    "I start by confirming retrieval quality with labelled recall at k so I am not debugging generation while the wrong passage is in the window. If retrieval is healthy, I look at prompt instructions to cite or refuse, lost-in-the-middle packing, contradictory chunks, temperature, and models that ignore context. Faithfulness evaluation on a frozen set tells me whether the writer invented a SKU or a promo that was never in the chunk. I log the exact packed window, the citations, and the refusal decision so a bad answer is replayable. On recipes RAG the typical failure is retrieving ingredients and then inventing a catalogue SKU, which we constrain to retrieved rows. Lisa fails the eval if she cites a promotion that is not in the evidence window.",
+    "When recipe RAG retrieved ingredients and then invented a SKU, we constrained generation to retrieved catalogue rows instead of letting the model free-write product codes.",
+    "Lisa fails the evaluation if she cites a promo that is not present in the retrieved chunk, even when the surrounding policy page was relevant.")
 add("Choose the right chunking strategy for complex legal contracts.",
-    "Do not tear a clause in half. Keep sections with their headings.",
-    "Structure-aware: numbered clauses, definitions glossary, exhibits, overlap, table integrity. Eval questions that need a definition plus a later clause. Avoid naive 512-token windows.",
-    "Return policy as a mini-contract: window stays attached to 'Returns'.")
+    "Do not tear a clause in half. Keep numbered sections with their headings, keep definitions with the clauses that use them, and keep tables intact. Naive five-hundred-twelve-token windows destroy legal meaning.",
+    "Contracts need structure-aware chunking: numbered clauses, a definitions glossary that can be joined at retrieval time, exhibits kept as units, modest overlap, and table integrity. I evaluate with questions that require a definition plus a later operative clause so a window that split them will fail. Overlap helps when a cross-reference sits on a boundary, but overlap is not a substitute for respecting headings. I avoid naive fixed token windows because they cut through shall and shall-not language. In retail the return policy behaves like a mini-contract, so the window stays attached to the Returns heading rather than mixing with shipping. The same discipline applies to membership terms that Lisa must quote accurately.",
+    "A store return policy is a mini-contract, so the retrieved window stays attached to the Returns heading instead of mixing half a clause with an unrelated shipping paragraph.")
 add("Compare BM25, dense retrieval, and hybrid search for different use cases.",
-    "BM25 = exact words. Dense = meaning. Hybrid = both, then rerank.",
-    "BM25 wins on SKUs/IDs; dense on paraphrase; hybrid+RRF default. Tune on a labelled set. Explain failure modes.",
-    "EZY-1044 vs 'something spicy for pasta tonight'.")
+    "BM25 wins when the shopper used the exact words or an identifier. Dense retrieval wins when they paraphrased. Hybrid search plus a reranker is the default because real questions mix both.",
+    "BM25 is lexical and dominates on SKUs, error codes, and rare identifiers that embedding models smear. Dense retrieval captures paraphrase and intent when the shopper says something spicy for pasta instead of a product code. Hybrid retrieval with reciprocal rank fusion is my default, followed by a cross-encoder reranker, and I tune fusion weights on a labelled set rather than by folklore. I explain failure modes in the interview: BM25 misses synonyms, dense misses exact IDs, and hybrid without metadata filters still leaks the wrong tenant. On ezyCart that split is concrete, because EZY-1044 must hit BM25 while a recipe question must hit dense plus policy chunks. The labelled set decides the blend, not a vendor slide.",
+    "EZY-1044 is a BM25 problem, while a shopper asking for something spicy for pasta tonight is a dense and hybrid problem that still reranks before Lisa writes.")
 add("Add a reranker and prove its impact with evaluation metrics.",
-    "Shortlist, then a careful reader reorders. Prove with a test.",
-    "Retrieve k=50–100, cross-encoder to n=5. Offline nDCG/MRR/Recall@k; online groundedness, latency, cost. Flag + canary.",
-    "50 recipe chunks → 5 for the LLM. Do not rerank 10M docs.")
+    "You shortlist cheaply, then a careful reader reorders the shortlist. You prove the reader helped with an offline test and an online canary, not with a demo of one query.",
+    "I retrieve fifty to a hundred candidates with hybrid search, then a cross-encoder reranks to about five chunks for the generator. Offline I report nDCG, MRR, and recall at k on a frozen labelled set, and I keep the retriever recall in the table so a reranker cannot hide a broken index. Online I watch groundedness, latency, and cost, because a beautiful nDCG that adds two hundred milliseconds may still lose. The change ships behind a flag and a canary so we can turn it off. I never rerank ten million documents; the point of ANN plus BM25 is to feed the reranker a shortlist. On recipes RAG, fifty recipe chunks become five for the LLM, and that is the measurable step.",
+    "We retrieve about fifty recipe chunks and rerank to five for the LLM. We do not rerank ten million catalogue documents, because that would miss the point of the first-stage index.")
 add("Reduce LLM inference costs by 70% without sacrificing answer quality.",
-    "Stop using the expensive brain for easy homework. Prove it on a frozen exam.",
-    "Prompt/RAG compression, semantic cache, routing to small models, quant/distill, batching, cap tokens. Hold correctness+groundedness+safety. 70% is measured $/successful-task, not a slogan.",
-    "FAQ cache/small model; complex recipes to GPT-4o/Claude.",
-    "Vision already uses ONNX/TF Lite per frame instead of a cloud GPU.")
+    "Stop sending easy homework to the expensive model. Cache, compress, route, and quantize, then prove the savings on a frozen exam that still measures correctness. Seventy percent is a measured dollars-per-successful-task number, not a slogan.",
+    "I treat cost as a product metric: dollars per successful task on a frozen evaluation, holding correctness, groundedness, and safety constant. Levers are prompt and RAG compression, a semantic cache for near-duplicate questions, routing easy intents to small models, quantization or distillation, batching, and hard token caps. FAQs and cache hits should never touch a frontier model. Complex recipe reasoning can still go to a strong model when the eval says quality requires it. Edge vision already uses ONNX and TF Lite per frame instead of a cloud GPU, which is the same idea at the cart. I would not claim a seventy percent cut until the exam and the production meter agree, and I would not invent a dollar total that is not on the resume.",
+    "FAQ traffic hits a semantic cache or a small model, while complex recipes still go to a strong model when the frozen eval says quality requires it.",
+    "Cart vision already uses ONNX and TF Lite per frame under a sub-100ms budget instead of calling a cloud GPU for every camera frame.")
 add("Reduce time to first token in a production chatbot.",
-    "Start talking sooner. Blank bubbles feel broken.",
-    "SSE, shorter prefill, prefix/KV cache, speculative decoding, colocated GPU, don't block on all tools, faster model for greetings. Track TTFT p50/p95 separate from total.",
-    "Lisa streams while a promo tool still runs. Stable system prompt for prefix cache.")
+    "Start talking sooner, because a blank bubble feels like an outage. Stream tokens, shorten the prefill, and do not block the first word on every tool finishing.",
+    "Time to first token is dominated by prefill, queueing, and any synchronous tool work before the first byte. I stream with SSE, shorten system plus history plus chunks, reuse prefix and KV cache for a stable system prompt, and consider speculative decoding where the draft model is trustworthy. Greetings and simple FAQs can use a faster model. Tools that are not required for the first sentence run in parallel after streaming starts. I track TTFT p50 and p95 separately from total latency so a long recipe does not hide a slow first token. Lisa should stream while a promo tool is still running, which is the same lesson as not blocking a trolley UI on a slow backend call.",
+    "Lisa streams the first sentence while a promo tool is still running, and we keep the system prompt stable so prefix cache actually hits.")
 add("Design a semantic caching system and track cache hit rates.",
-    "Near-duplicate questions reuse a good answer.",
-    "Embed normalized query; hit if similarity+ACL+fresh sources. Version hashes. Metrics: hit, stale-hit, quality, $, latency. Bypass personalization/stock.",
-    "Basket-hash cache for recipes. Never cache another shopper's member price.")
+    "Near-duplicate questions should reuse a good answer instead of paying for another generation. Hits must respect ACL, freshness, and personalization, or the cache becomes a leak.",
+    "I embed a normalized query and count a hit only when similarity, ACL, and source versions all match. Cache keys include a hash of the retrieved corpus versions so a policy update invalidates answers. Metrics are hit rate, stale-hit rate, answer quality on hits versus misses, dollars saved, and latency. Personalized prices and live stock bypass the cache. Version hashes travel with the entry so a prompt or index change does not serve yesterday's sentence. On ezyCart a basket-hash cache can reuse a recipe for an identical basket, but we never cache another shopper's member price. That is the same tenancy discipline as FastAPI request isolation.",
+    "A basket-hash cache can reuse a recipe for an identical cart, but we never cache another shopper's member price, because that would be both a privacy bug and a correctness bug.")
 add("Build a model router that balances cost, latency, and response quality.",
-    "Receptionist sends easy tickets to a junior, hard to a senior.",
-    "Intent/complexity classifier. Routes: cache → extractive → 8B vLLM/Ollama → mid → frontier, with fallbacks, rate limits, token budgets. A/B on the same eval. This is the LLM abstraction on the resume.",
-    "SKU lookup no LLM; recipe mid+RAG; complaint Claude/GPT-4o; Bedrock throttle → vLLM Llama 3.")
+    "A receptionist sends easy tickets to a junior and hard tickets to a senior. The router is that receptionist, with fallbacks, budgets, and an evaluation that proves the split.",
+    "An intent and complexity classifier routes cache, extractive lookup, a small locally served model, a mid-size model with RAG, or a frontier model. Each route has fallbacks, rate limits, and token budgets so a Bedrock throttle degrades to a vLLM Llama instead of hanging the tablet. I A/B the router on the same frozen eval rather than on vibes, which is the LLM abstraction I talk about as Lead GenAI work at Retailetics. SKU lookup should not use an LLM at all. Recipe questions can use a mid-size model plus recipes RAG. Complaints and unsafe edge cases go to a stronger model. The resume claim is the routing idea plus measured quality, not a catalogue of every vendor name.",
+    "SKU lookup uses no LLM, a recipe question uses a mid-size model plus RAG, a complaint can go to a frontier model, and a Bedrock throttle falls back to a locally served Llama rather than stalling Lisa.")
 add("Build a tool-using AI agent with reliable execution.",
-    "Model asks; your code is the adult: validate, run, stop.",
-    "LangGraph/CrewAI/AutoGen state machine. JSON schemas, allowlists, timeouts, retries, idempotency. HITL for money. Trace LangSmith/Langfuse. MCP ≠ security.",
-    "Lisa: search auto; add_to_cart confirm; pay never from untrusted text.")
+    "The model may ask, but your code is the adult. You validate arguments, run an allowlisted tool, and stop. Money and safety never execute from untrusted text alone.",
+    "I implement the agent as a state machine in LangGraph, with CrewAI or AutoGen only when a research spike needs role play. Tools have JSON schemas, allowlists, timeouts, retries, and idempotency keys. Human-in-the-loop sits in front of payment and irreversible stock changes. Traces go to LangSmith or Langfuse so a loop is visible. MCP is a connector, not a security boundary, so authorization still lives in our gateway. Lisa may search automatically, must confirm add-to-cart, and must never pay from a sentence in a retrieved document. FastAPI and Spring Boot already treat request bodies as untrusted, and LLM tool calls get the same treatment.",
+    "Lisa may search inventory automatically, must confirm add-to-cart with the shopper, and must never fire a pay tool from untrusted retrieved text.")
 add("Debug an agent stuck in an infinite tool-calling loop.",
-    "Same calculator forever — max tries and notice repeats.",
-    "Duplicate signatures, oscillating args, empty tool errors. Step budget, force-final node, circuit breaker, traces.",
-    "get_stock empty SKU retries 40× → typed error after 2, then ask shopper.")
+    "If the same calculator runs forever, you cap the tries and notice the repeats. Loops are a product bug, not a personality quirk of the model. Step budgets and typed errors are how you stop an empty SKU from retrying forty times.",
+    "I look for duplicate tool signatures, oscillating arguments, and empty errors that the model interprets as try again. The graph has a step budget, a force-final node, and a circuit breaker on identical calls. Traces show the repeating signature so on-call is not reading poetry. Typed errors after two failures beat a raw empty string that invites another retry. On Lisa, get_stock with an empty SKU retrying forty times is a schema and budget failure. After two typed errors the agent must ask the shopper instead of hammering inventory. That is the same discipline as bounding WebSocket retries on the cart.",
+    "If get_stock retries on an empty SKU, we return a typed error after two attempts and then ask the shopper, instead of letting the agent hammer inventory forty times.")
 add("Design long-term memory for an AI assistant.",
-    "This-chat is short-term. Long-term is a curated notebook, not a junk drawer.",
-    "Working thread + episodic summaries + structured profile + enterprise RAG. Write validated memories only. Recency×importance retrieve. User delete. No secrets.",
-    "Remember vegetarian preference, never card PAN. TAN params in versioned config, not chat logs.")
+    "This chat is short-term memory. Long-term memory is a curated notebook, not a junk drawer of every token. Users can delete it, and secrets never go in it.",
+    "I separate working thread state, episodic summaries, a structured profile, and enterprise RAG. Writes are validated and permissioned, not a transcript dump. Retrieval uses recency times importance so a one-off complaint does not outweigh a stable diet preference. Users can inspect and delete memories. Secrets, card PAN, and trading parameters do not belong in chat logs. Lisa may remember a vegetarian preference and must never remember a card number. TAN Intelligence parameters live in versioned config for that independent venture, not in an assistant memory store, and TAN is not an employer.",
+    "Lisa may remember a vegetarian preference and must never store a card PAN. TAN indicator parameters stay in versioned config for that independent venture, not in shopper chat logs.")
 add("Enforce valid JSON output from an LLM.",
-    "Ask for a form, not an essay. Reject broken forms.",
-    "Schema/tool/constrained decode. Pydantic validate. One repair then fail closed. Low T.",
-    "add_to_cart {sku, qty>0}. FastAPI already treats bodies as untrusted — same for LLM output.")
+    "Ask for a form, not an essay, and reject a broken form. One repair attempt is polite; failing closed is required when the payload moves stock or money.",
+    "I use schema-constrained decoding or tool calling, then Pydantic validation at the boundary. One repair pass may retry a malformed object, then we fail closed rather than guessing. Temperature stays low for structured calls. This is the same untrusted-body stance FastAPI already applies to HTTP. add_to_cart must be an object with a SKU and a quantity greater than zero, not a sentence that happens to contain those words. Spring Boot services that execute the side effect re-validate, so a clever string never skips the schema. Constrained decoding reduces repairs but does not replace validation.",
+    "add_to_cart must be JSON with a SKU and a quantity greater than zero. FastAPI already treats request bodies as untrusted, and LLM output gets the same Pydantic gate before any cart mutation.")
 add("Detect hallucinations and reduce unsupported answers.",
-    "If the book is silent, say 'I don't know'.",
-    "Ground, citations, NLI/judge on context only, abstain, eval set, monitor. Not 0%.",
-    "No allergen claim without a chunk. Low-confidence YOLO does not bill.")
+    "If the book is silent, say you do not know. Hallucinations are not a zero percent problem, but unsupported claims can be measured and refused.",
+    "I ground answers in retrieved evidence, require citations, and run an NLI or judge check against the context window only. The model must abstain when evidence is missing. An evaluation set tracks unsupported claims, and production monitoring samples for the same failure. You will not reach zero percent, and anyone who promises that is selling. Allergen statements without a chunk are refused. Low-confidence YOLO detections do not bill a shopper, which is the vision analogue of abstention. Lisa's recipes RAG is held to the same standard: no invented ingredient that is not in the retrieved card.",
+    "Lisa must not make an allergen claim without a supporting chunk, and a low-confidence YOLO detection must not bill a shopper, because both are unsupported answers with real cost.")
 add("Build an evaluation pipeline for a customer-support / shopping chatbot.",
-    "A practice exam from real tickets. Every prompt change sits the exam.",
-    "Golden set, retrieval+answer+tool+safety+latency+cost. CI gate. Human spot. Shadow traffic. LangSmith datasets.",
-    "100 Lisa questions with known SKUs. Fail if add_to_cart on missing item.")
+    "Build a practice exam from real tickets and make every prompt change sit that exam. If add-to-cart fires on a missing item, the exam fails, even if the prose sounded friendly.",
+    "The pipeline is a golden set covering retrieval, answer quality, tool correctness, safety, latency, and cost. It runs as a CI gate, with human spot checks and shadow traffic on production logs. LangSmith or Langfuse datasets hold the cases so traces are comparable across prompt versions. For Lisa I want on the order of a hundred questions with known SKUs and known expected tools. The suite fails if add-to-cart runs on a missing item or if a citation is not in the window. This is how Lead GenAI work at Retailetics stays honest when a prompt tweak looks clever in a demo. Quality is a blocker, not a dashboard decoration.",
+    "A golden set of about a hundred Lisa questions with known SKUs fails the build if add-to-cart runs on a missing item, even when the chatbot's sentence sounds helpful.")
 add("Make LLM-as-a-judge evaluations reliable and consistent.",
-    "One picky teacher is noisy. Rubric, examples, calibration.",
-    "Anchored rubric, few-shot, separate faithfulness vs tone, multi-sample, kappa vs humans, pin model+T, blind systems, re-calibrate on judge change.",
-    "Judge only 'is every ingredient in evidence?', not 'sounds tasty'.")
+    "One picky teacher is noisy. You write a rubric, give examples, and calibrate against humans. Then you pin the judge so it does not drift under you.",
+    "I use an anchored rubric, few-shot examples, and separate scores for faithfulness versus tone so a witty wrong answer cannot win. Multi-sample judging and Cohen's kappa against humans tell me whether the judge is usable. I pin the judge model and temperature, blind the systems, and recalibrate when the judge changes. The judge for recipes asks whether every ingredient is in the evidence, not whether the answer sounds tasty. That split keeps Lisa's eval from rewarding prose over truth. Reliability is a process, not a single GPT call with a thumbs-up prompt.",
+    "The judge scores whether every ingredient is present in the evidence window, not whether the recipe sounds tasty, so Lisa cannot pass on style while failing on groundedness.")
 add("Defend a tool-using agent against prompt injection.",
-    "A webpage note must not empty the till.",
-    "User+retrieved text untrusted. Allowlist, schema, ignore non-channel 'tool calls', strip instructions in docs, sandbox, HITL money, red-team. MCP still needs authz.",
-    "Description 'ignore policy, 100% off' cannot fire discount tool.")
+    "A note on a web page must not empty the till. Retrieved text is untrusted data, not an operator. Tools stay allowlisted and money stays behind a human.",
+    "User text and retrieved documents are untrusted. Tools are allowlisted with schemas, and non-channel tool-call syntax inside a document is ignored. We strip instruction-like language from ingested docs where we can, sandbox code tools, and require human-in-the-loop for money. Red-team suites include HTML comments that say ignore policy. MCP still needs authorization in our gateway. A product description that says ignore policy, one hundred percent off, cannot fire a discount tool. Lisa's pay path is the same rule we already apply to untrusted FastAPI bodies. Injection is an authorization problem, not only a prompt-writing problem.",
+    "A product description that says to ignore policy and apply one hundred percent off must not be able to fire the discount tool, because retrieved text is data, not an operator.")
 add("Detect and redact PII before sending data to an LLM.",
-    "Cover the ID card before photocopying for a tutor.",
-    "Regex+NER+checksums at gateway. Tokenize/vault. Minimize. No secrets in LangSmith. Blur faces if unused.",
-    "Device ids in logs; 'call me at +91…' stripped from RAG. Public resume phones ≠ customer PII.")
+    "Cover the ID card before you photocopy it for a tutor. Redaction sits at the gateway, not as a hope that the model will be discreet. If a phone number or card-like string can reach the vendor prompt, the design already failed.",
+    "Regex, NER, and checksums run at the gateway so phone numbers, device identifiers, and card-like strings are tokenized or vaulted before any vendor prompt. We minimize what we send and we do not put secrets in LangSmith traces. Faces are blurred when vision does not need them. Device identifiers stay in operational logs with access control, while a shopper saying call me at a phone number is stripped from RAG text. Public resume phone numbers are not customer PII, and I do not confuse those categories in an interview. The goal is least data to the model, not a perfect NER demo.",
+    "Device identifiers stay in controlled logs, and a shopper saying call me at a phone number is stripped before RAG, because customer PII is not the same thing as a public resume contact line.")
 add("Choose between RAG, fine-tuning, and prompt engineering for a real use case.",
-    "Instructions vs open book vs extra practice. Combine. Don't bake daily prices into weights.",
-    "Prompt: format/tone/tools. RAG: changing facts. LoRA/FT: stable task/style with labels. Measure.",
-    "Promo of the week = RAG. JSON style = prompt. 5k receipts = LoRA.")
+    "Prompting is instructions, RAG is an open book, and fine-tuning is extra practice on a stable skill. You combine them. You do not bake this week's prices into weights.",
+    "Prompt engineering owns format, tone, and tool use. RAG owns facts that change, such as promotions, policies, and catalogue text. LoRA or full fine-tuning owns a stable task style when you have labels and a frozen skill, not a daily price list. I measure all three on the same eval before I spend GPU time. Promo of the week is RAG. JSON style is a prompt or constrained decoding. Five thousand labelled receipts could justify LoRA for a classification or extraction skill. Recipes RAG with LangChain and LlamaIndex is the open book for Lisa; it is not a reason to fine-tune a new model every time the menu changes.",
+    "Promo of the week is RAG, JSON style is a prompt, and five thousand labelled receipts could justify LoRA for a stable extraction skill, while the live catalogue still stays in retrieval.")
 add("Fine-tune a small language model using LoRA on 5,000 examples.",
-    "Bolt on a small trainable adapter; don't rebuild the engine.",
-    "Freeze Llama 3/Mistral, rank/alpha/dropout, clean split, task metrics, early stop, merge or vLLM adapter, quantize after quality. 5k overfits easily.",
-    "LoRA JSON {dishes, missing_skus}; catalogue stays RAG. No shuffled time-series labels.")
+    "Bolt on a small trainable adapter instead of rebuilding the engine. Five thousand examples overfit easily, so you watch a held-out set and stop early.",
+    "I freeze a base such as Llama 3 or Mistral, train a LoRA adapter with a modest rank, alpha, and dropout, and keep a clean train, validation, and test split. Task metrics, not loss theater, decide early stopping. I merge or serve the adapter in vLLM, and I quantize only after quality holds. Five thousand rows overfit quickly, especially if labels are noisy. I would LoRA a JSON extractor for dishes and missing SKUs while the catalogue stays in RAG. I would not shuffle time-series labels, which is the same leakage hygiene TAN Intelligence uses on walk-forward work for that independent venture. Fine-tuning does not replace recipes RAG for changing facts.",
+    "LoRA can teach a small model to emit JSON with dishes and missing SKUs, while the catalogue stays in RAG. I would not shuffle time-series labels, because that leaks the future the same way a leaked trading split would.")
 add("Serve open-source LLMs at scale using batching, KV caching, and quantization.",
-    "Share the oven, remember the story so far, use a lighter cookbook.",
-    "vLLM: continuous batch, paged KV, prefix cache, parallel. AWQ/GPTQ/INT8. SLOs TTFT/tok-s. Fallback Bedrock/Vertex. Token budgets. Edge ≠ vLLM (ONNX/TF Lite).",
-    "FAQ on vLLM Llama 3; hard RAG on frontier; cart vision still TensorRT/TF Lite sub-100ms.")
+    "Share the oven, remember the story so far, and use a lighter cookbook when quality allows. Edge devices are not the same runtime as a GPU server.",
+    "vLLM-style serving uses continuous batching, paged KV cache, prefix cache, and tensor parallelism to raise tokens per second without a static wait for a full batch. AWQ, GPTQ, or INT8 quantization cut memory when the eval still passes. SLOs are TTFT, tokens per second, and error rate, with fallback to Bedrock or Vertex when the pool saturates. Token budgets protect cost. Edge carts do not run vLLM; they run ONNX and TF Lite under a sub-100ms vision budget. FAQs can sit on a local Llama, hard RAG can sit on a frontier model, and cart vision stays on TensorRT or TF Lite. That split is how FastAPI backends and device inference stay in their lanes.",
+    "FAQ traffic can sit on vLLM Llama, hard RAG can sit on a frontier model, and cart vision stays on TensorRT or TF Lite under a sub-100ms budget rather than borrowing the LLM GPU.")
 add("Implement SSE streaming with proper handling of client disconnects.",
-    "Talk while thinking; stop if they hung up so you don't burn GPU money.",
-    "text/event-stream, flush tokens, cancel on disconnect, heartbeats, optional Last-Event-ID. FastAPI StreamingResponse. Don't buffer the whole answer.",
-    "Tablet sleeps → cancel Lisa generation. WS for IoT; SSE for tokens.")
+    "Talk while you think, and stop if they hung up so you do not burn GPU on a tablet that went to sleep. Streaming is a cancellation problem, not only a flush problem.",
+    "I use text/event-stream, flush tokens as they arrive, send heartbeats, and cancel GPU work on disconnect. Last-Event-ID is optional for resume, but checkout chat usually restarts a turn cleanly. FastAPI StreamingResponse must not buffer the whole answer. WebSockets remain the IoT path for cart events, while SSE is the token path for Lisa. If a tablet sleeps, we cancel generation immediately. That is the same resource hygiene as dropping stale camera frames instead of inferring a backlog. Disconnect handling is what makes streaming cheaper than it looks in a happy-path demo.",
+    "If the tablet sleeps we cancel Lisa's generation immediately. WebSockets stay the IoT path for cart events, and SSE stays the token path for the chatbot.")
 add("Trace and debug every step of a multi-agent workflow.",
-    "Flight recorder per helper: tools, tokens, why they stopped.",
-    "OTel + LangSmith/Langfuse + LangGraph checkpoints, redacted prompts, correlation ids across FastAPI/Spring. Replay. Alert on loops/cost.",
-    "Planner → retriever → add_missing_sku. Same discipline as IoT seq ids.")
+    "Give every helper a flight recorder for tools, tokens, and why they stopped. If you cannot replay a loop from those traces, you cannot operate the agent in production. Correlation identifiers have to cross the API and the graph, or the recorder is theater.",
+    "I combine OpenTelemetry with LangSmith or Langfuse and LangGraph checkpoints. Prompts are redacted, correlation identifiers cross FastAPI and Spring Boot, and we replay traces after incidents. Alerts fire on loops, cost spikes, and missing tool spans. Planner to retriever to add_missing_sku should be as inspectable as IoT sequence identifiers on the trolley. The discipline is the same as production WebSockets: if the event is not sequenced and logged, you will argue from memory. Tracing is how a Principal AI answer stays operational rather than theatrical.",
+    "A planner that hands work to a retriever and then to add_missing_sku must carry the same correlation discipline as IoT sequence identifiers on the trolley, so a loop is replayable.")
 add("Roll back a prompt change that degrades production performance.",
-    "Prompts are code. Revert like an API.",
-    "Git+config version, CI eval, canary, auto-rollback on groundedness/tool-error/latency, pin last-good. No cowboy hot-edits.",
-    "'Be more creative' invented ingredients → revert prompt id.")
+    "Prompts are code. You revert them like an API, with versions, canaries, and an automatic trip back to last-good. Cowboy hot-edits in a vendor console are an incident waiting to happen.",
+    "Prompt text lives in git and config with an identifier, CI eval, canary traffic, and automatic rollback on groundedness, tool-error rate, or latency regressions. Last-good is pinned. A change that says be more creative and then invents ingredients reverts by prompt id, not by folklore. This matches how we already treat FastAPI configs and ONNX model aliases. I do not hot-edit production prompts in a vendor console during an incident except as a documented emergency, and even then I snapshot the id. Quality gates block the deploy; dashboards do not replace them.",
+    "When a be more creative prompt invented ingredients, we reverted by prompt identifier to the last-good version rather than trying to patch the sentence live in a vendor console.")
 add("Design a ChatGPT-style application for 1 million daily active users.",
-    "A factory: queues, caches, routing, graceful failure — not one script. DAU ≠ concurrency.",
-    "Auth, rate limits, conversation store, cache/small/RAG/agent routes, autoscaled vLLM/Bedrock, SSE, ACL, PII, safety, eval, cost/session, cells. SLOs TTFT/useful/safe/$.",
-    "Hot path: cart WS events. Chat path: Lisa. Colan 500K taught indexing/caching — GPUs are the extra bottleneck.")
+    "A million daily users is a factory of queues, caches, routing, and graceful failure, not one Python script. Daily active users are not the same as concurrency, and GPUs are an extra bottleneck on top of ordinary web scale.",
+    "I start from auth, rate limits, a conversation store, and routes for cache, small models, RAG, and agents. Model serving autoscale across vLLM or Bedrock, responses stream with SSE, and ACL, PII, and safety sit on every path. Evaluation, cost per session, and cell-based isolation keep one noisy tenant from drowning the fleet. SLOs cover TTFT, useful answers, safety, and dollars. The hot path on ezyCart is cart WebSocket events; the chat path is Lisa. Colan taught indexing, caching, and backends that ran about forty percent faster for around five hundred thousand users, and those lessons still apply, with GPUs as the new bottleneck. I do not invent a dollar cost for this design.",
+    "The hot path is cart WebSocket events, the chat path is Lisa, and the Colan-scale lesson of about five hundred thousand users with faster backends still applies, except GPUs are now the extra bottleneck.")
 
 # RAG at scale extras
 add("How do you handle document updates and deletions in RAG?",
-    "If a policy is shredded, the assistant must not quote it tomorrow.",
-    "Idempotent upserts, tombstones, TTL, re-embed on chunker/model change, search-time filter on version. Test deletion in eval.",
-    "Expired promo vectors must not retrieve. Membership price updates invalidate semantic cache.")
+    "If a policy is shredded, the assistant must not quote it tomorrow. Updates and deletes are part of retrieval correctness, not a weekend reindex hobby.",
+    "Ingest is idempotent. Deletes become tombstones or immediate removals with a search-time version filter so a stale vector cannot win. TTL covers promotions that expire. Chunker or embedding-model changes force a re-embed, not a hopeful overwrite of a few rows. Deletion is an evaluation case, not an ops footnote. Expired promo vectors must not retrieve, and membership price updates invalidate the semantic cache. Recipes RAG over catalogue and policy has to follow the same rule or Lisa will quote last week's deal. Incremental upserts keep ten million documents operable without a full rebuild on every edit.",
+    "Expired promo vectors must not retrieve, and a membership price update must invalidate the semantic cache so Lisa cannot quote last week's deal.")
 add("Lost-in-the-middle — what is it and the fix?",
-    "Models skip the boring middle of a long pile of pages.",
-    "Put best chunks first/last, shorten context, rerank harder, hierarchical summarize.",
-    "5 tight chunks beat 40 mediocre ones in Lisa.")
+    "Models skip the boring middle of a long pile of pages. You put the best evidence first and last, you shorten the pile, and you rerank harder. Five tight chunks beat forty mediocre ones because the writer actually reads the evidence.",
+    "Lost-in-the-middle means a long context window under-attends to passages that sit in the middle. Fixes are reranking so only a few chunks remain, placing the strongest evidence at the start and end, hierarchical summarization, and refusing to stuff forty mediocre chunks. Five tight chunks beat forty weak ones for Lisa. This is why I measure faithfulness against the packed window, not against the whole corpus. RAG quality is often a packing problem after retrieval already looked fine. I would rather spend budget on a reranker than on a longer context that the model will ignore.",
+    "Five tight recipe chunks beat forty mediocre ones in Lisa, because a long middle-heavy window is how grounded recipes turn into invented steps.")
 add("Parent-child / hierarchical / late chunking?",
-    "Retrieve a small bite, then bring its parent section for writing.",
-    "Small embeddings for recall, larger window for generation. Late chunking embeds whole doc then pools.",
-    "Retrieve a recipe step, expand to full recipe card before generating.")
+    "Retrieve a small bite so recall is sharp, then bring the parent section so the writer has enough context. That is parent-child. Late chunking embeds a whole document and then pools spans.",
+    "Small child embeddings improve recall on a specific sentence, while the parent window gives the generator the surrounding clause. Hierarchical indexes store summaries for routing and leaves for quoting. Late chunking embeds the full document with overlapping spans and pools those token embeddings into chunk vectors, which can preserve context that naive splits lose. I pick the method with an eval, not with a blog post. For recipes RAG I retrieve a step and expand to the full recipe card before generating. Contracts get the same treatment so a definition child can pull the parent clause. Complexity is allowed only when recall and faithfulness both move.",
+    "We retrieve a recipe step as the child and expand to the full recipe card as the parent before Lisa generates, so recall stays sharp and the writer still sees the whole method.")
 add("Hybrid fusion: RRF vs weighted score?",
-    "Two ranked lists need a fair merge.",
-    "Reciprocal Rank Fusion is scale-free. Weighted needs calibration. Then rerank.",
-    "BM25 rank + dense rank → RRF → cross-encoder.")
+    "Two ranked lists need a fair merge. Reciprocal rank fusion does not care that BM25 scores and cosine scores live on different planets. Weighted sums need calibration first.",
+    "Reciprocal rank fusion is scale-free and is my default merge for BM25 and dense ranks. A weighted score mix can win after you calibrate both score distributions on a labelled set, but uncalibrated sums are a common foot-gun. After fusion I still rerank with a cross-encoder. I explain this as operations, not as a religious preference. On ezyCart, BM25 rank plus dense rank go through RRF and then a reranker before Lisa sees chunks. If a labelled SKU set says a weighted mix is better, we switch and re-eval. Fusion is a measurable component, not a one-time architecture decision.",
+    "BM25 rank and dense rank merge with reciprocal rank fusion, then a cross-encoder reranks, so Lisa never sees raw uncalibrated score sums.")
 add("How do you evaluate RAG (senior)?",
-    "Did we find the right page, and did we use it honestly?",
-    "Recall@k, nDCG, MRR, faithfulness, answer relevance, citation accuracy, abstain quality, latency, cost, permission leaks. Separate retrieval vs gen.",
-    "Golden 100 with labelled passages. CI fails on recall or faithfulness drop.")
+    "Did we find the right page, and did we use it honestly? Those are two different exams, and you fail the build if either drops. Senior RAG evaluation is that split plus latency, cost, and permission leaks, not a single thumbs-up.",
+    "I separate retrieval metrics from generation metrics. Retrieval uses recall at k, nDCG, and MRR on labelled passages. Generation uses faithfulness, answer relevance, citation accuracy, and abstain quality. Latency, cost, and permission-leak tests sit beside quality because a correct leak is still a failure. A golden set of about a hundred cases with labelled passages is the CI gate. Recipes RAG and Lisa fail the build on a recall drop or a faithfulness drop, not on a vibe. Senior evaluation is this split plus traces, not a single thumbs-up from a judge model.",
+    "A golden set of about a hundred labelled passages fails CI if recall or faithfulness drops, which is how Lisa's recipes RAG stays honest when someone tweaks chunking.")
 add("RAG security beyond ACL filters?",
-    "Permissions, injection in docs, secrets in traces, confused deputy.",
-    "Pre-retrieval authz, per-tenant indexes, injection tests, DLP, audit, encryption.",
-    "A retrieved HTML comment should not become a tool call.")
+    "Filters are necessary and not sufficient. You still have injection in documents, secrets in traces, and a confused deputy if the assistant can call tools the user could not.",
+    "Authorization happens before retrieval, indexes are per tenant when isolation requires it, and injection tests sit in CI. DLP watches prompts and traces, encryption covers indexes at rest, and audit logs show who retrieved what. A retrieved HTML comment must not become a tool call. Shopper ACL versus staff stock-audit chunks is the retail version of this review. FastAPI and Spring Boot already enforce authn and authz on HTTP, and RAG is not allowed to bypass that with a helpful sentence. Security for RAG is a data-flow diagram, not an Elasticsearch filter checkbox.",
+    "A retrieved HTML comment must not become a tool call, and a shopper ACL must never see staff stock-audit chunks even if hybrid search thinks they are relevant.")
 add("When is RAG the wrong tool?",
-    "When you need a guaranteed calculation, a millisecond SKU lookup, or a stable classifier.",
-    "Deterministic functions and SQL for facts; RAG for language over docs. Don't RAG 2+2.",
-    "Cart total is arithmetic. Policy explanation is RAG.")
+    "RAG is the wrong tool when you need a guaranteed calculation, a millisecond SKU lookup, or a stable classifier. Do not retrieve a novel in order to add two plus two.",
+    "Deterministic functions and SQL own facts that must be exact. RAG owns language over documents. I keep cart totals as arithmetic, stock as an API, and policy explanation as RAG. Mixing those is how Lisa quotes a stale price from a chunk. At checkout, YOLO and RT-DETR decisions are model inference with a threshold, not retrieval. TAN Intelligence signals are computed from Pine and Python rules, not from a RAG over blog posts, and TAN is an independent venture rather than an employer. Knowing when not to use RAG is part of Principal AI judgment.",
+    "A cart total is arithmetic and a live price comes from SQL, while a policy explanation is RAG. Lisa must not treat a week-old chunk as the bill.")
 add("Multi-index routing?",
-    "First guess which library, then search it.",
-    "Query classifier → policies vs recipes vs SKUs. Cuts noise and cost.",
-    "Allergen question → policy index, not recipe blog.")
+    "First guess which library you need, then search that library. Searching every index on every question adds noise and cost. A router with an evaluation is cheaper than one giant undifferentiated pile of ten million documents.",
+    "A query classifier sends allergen and policy questions to the policy index, recipe how-tos to the recipe index, and SKU identifiers to the catalogue or BM25 SKU index. Routing cuts noise, latency, and dollars. Mistakes are visible in traces and in per-index recall. I would rather add a router with an eval than build one giant undifferentiated index for ten million documents. Lisa's recipes RAG is already a distinct corpus from staff policy. FastAPI can expose the router as an ordinary service so Spring Boot callers do not reimplement it. Routing is retrieval architecture, not a chat-flavor setting.",
+    "An allergen question routes to the policy index rather than a recipe blog index, so Lisa does not answer a safety question from a cooking paragraph.")
 add("Embedding drift and re-index jobs?",
-    "New embedding model = old map is wrong. Rebuild.",
-    "Version embeddings in metadata. Blue/green indexes. Dual-write during migrate.",
-    "Upgrade embedding model overnight with a shadow index and recall compare.")
+    "A new embedding model makes the old map wrong, so you rebuild instead of mixing spaces. Version the embeddings, dual-write, and compare recall before you swap the alias.",
+    "Embedding vectors are versioned in metadata so a query embedded with model B never searches an index built with model A. Blue-green indexes and dual-write during migration keep rollback cheap. Overnight rebuilds of a catalogue index run as jobs with recall comparison on a labelled set. I do not mix spaces and hope cosine still means something. Recipes RAG follows the same rule when we change the embedding model under LangChain or LlamaIndex. Re-index cost and backfill SLA are part of the design, not an afterthought. Drift is an operational event with a runbook.",
+    "We upgrade an embedding model with a shadow index, compare recall on the labelled set, and only then swap the live alias, including for the recipes RAG corpus.")
 
 # Agents advanced
 add("When is a multi-agent system worse than one agent?",
-    "Too many cooks, extra cost, extra failure points.",
-    "Measure task success, latency, $ against a single-agent or chain baseline. Add agents only for genuine specialization.",
-    "Formatting JSON with three CrewAI roles is worse than Pydantic.")
+    "Too many cooks add cost and failure points. You add agents only when specialization is real and the evaluation says the extra graph wins. Formatting JSON with three roles is the classic case where one function and a schema would have been enough.",
+    "I measure task success, latency, and dollars against a single-agent or chain baseline. Extra agents are justified by genuine specialization, different tools, or different permissions, not by a framework demo. Formatting JSON with three CrewAI roles is worse than Pydantic. Lisa should not become a committee to add pasta sauce. LangGraph stays simple until evaluation proves a supervisor split helps. At Principal AI level the burden of proof is on the more complex graph. Complexity is a budget you spend, not a status symbol.",
+    "Formatting JSON with three CrewAI roles is worse than validating with Pydantic, and Lisa does not need a committee of agents to add pasta sauce.")
 add("Human-in-the-loop patterns?",
-    "The model may suggest; a human taps OK on money and safety.",
-    "LangGraph interrupt, timeouts, default-deny. Audit who approved.",
-    "Add-to-cart auto; pay requires the shopper tap.")
+    "The model may suggest, and a human taps OK on money and safety. Auto is for reversible low-risk steps. Deny is the default when the timeout expires.",
+    "LangGraph interrupts, timeouts, and default-deny policies sit in front of irreversible tools. The audit log records who approved, from which device, and on which trace. Add-to-cart can be automatic after confirmation rules, while pay requires the shopper tap. I do not hide HITL behind a prompt that says please be careful. FastAPI and the Android client already know how to confirm; the agent must use that path. Human-in-the-loop is a control, not a slide. Allergen or medical edge cases abstain or escalate rather than guessing.",
+    "Add-to-cart can follow an explicit shopper confirm, and pay always requires the shopper tap, with an audit of who approved on which trace.")
 add("Idempotent tool calls?",
-    "Retrying 'charge' must not charge twice.",
-    "Idempotency keys from (trace, tool, canonical args). Store results.",
-    "add_to_cart retried after WS blip uses the same key.")
+    "Retrying a charge must not charge twice. Every side-effecting tool needs an idempotency key and a stored result so a network blip is safe to retry. Agents inherit that rule from ordinary backends; they do not get a special exception because a model is involved.",
+    "Idempotency keys come from the trace, the tool name, and canonical arguments. Results are stored so a retry returns the first outcome. add_to_cart retried after a WebSocket blip uses the same key. This is ordinary backend engineering applied to agents, the same as FastAPI handlers that must survive at-least-once delivery. Exactly-once LLM side effects are a myth; idempotent tools are the design. Spring Boot IoT gateways already think this way for device events. Agents that lack keys will double-scan in production.",
+    "add_to_cart retried after a WebSocket blip uses the same idempotency key so a cart line is added once, which is the same at-least-once discipline as the IoT path.")
 add("Agent memory vs RAG vs scratchpad?",
-    "Scratchpad is this task's notebook. Memory is longer. RAG is company books.",
-    "Don't dump full history. Summarize. Structured state in LangGraph.",
-    "State: basket[], missing[], step. RAG: policies. Memory: diet pref.")
+    "The scratchpad is this task's notebook, long-term memory is a curated preference store, and RAG is the company books. Do not dump the full history into any of them. Mixing those three is how a card number leaks into a prompt.",
+    "LangGraph state holds structured working memory such as the basket, missing SKUs, and the current step. RAG retrieves policies and recipes. Long-term memory holds validated preferences. I summarize instead of concatenating full history, because lost-in-the-middle and cost both punish dumps. Lisa's diet preference is memory, the return policy is RAG, and the current missing pasta sauce is scratchpad. Mixing those three is how you leak a card number into a prompt. Clear types make the agent operable.",
+    "State holds the basket, missing SKUs, and step; RAG holds policies and recipes; memory holds a diet preference. Lisa does not dump full chat history into any of those stores.")
 add("How do you bound agent cost?",
-    "Max steps, max tokens, max $, max wall time, then stop.",
-    "Budgets in the graph. Route cheap models first. Kill switches.",
-    "Recipe agent: ≤6 tool calls, ≤2k generated tokens.")
+    "Set a maximum on steps, tokens, dollars, and wall time, then stop. Unbounded loops are a cost incident, not a clever agent. Those budgets live in the gateway and the graph, because a prompt that asks the model to be brief will be ignored.",
+    "Budgets live in the graph and in the gateway, not only in a prompt that asks the model to be brief. Cheap routes run first. Kill switches disable the agent path. A recipe agent might be allowed a handful of tool calls and a few thousand generated tokens before it must finish or ask. I would not invent a platform-wide dollar savings claim. Colan's performance work taught me to meter backends; LLM tokens need the same metering. On-call pages on a cost spike because a loop at two in the morning is how bills become incidents.",
+    "A recipe agent is bounded to a small number of tool calls and generated tokens so a stuck loop cannot become an unbounded inference bill.")
 add("Deterministic fallbacks for agents?",
-    "If the clever helper fails, a boring function still works.",
-    "SKU barcode path never requires an LLM. LLM is overlay.",
-    "Scan still adds the item if Lisa is down.")
+    "If the clever helper fails, a boring function still works. Scanning a barcode must add the item even when Lisa is down. That fallback is how a trolley stays a product instead of becoming a demo that dies with the model.",
+    "The LLM is an overlay on deterministic checkout, not the only path. SKU barcode scan never requires an LLM. Feature flags shed to the function path when quality or latency trips. This is how ezyCart stays a trolley people can lean on. YOLO and RT-DETR already have confidence thresholds and fallbacks; agents need the same. FastAPI can serve the deterministic add-item API while the agent graph is disabled. A Principal AI design that cannot degrade is a demo.",
+    "A barcode scan still adds the item if Lisa is down, because checkout cannot depend on the agent overlay being healthy.")
 add("AutoGen vs CrewAI vs LangGraph — senior choice?",
-    "Pick the simplest orchestration you can operate.",
-    "LangGraph: control/state/HITL. CrewAI: roles. AutoGen: conversational. Eval, traces, security identical.",
-    "Production Lisa: LangGraph. Research spike: CrewAI. Don't run all three.")
+    "Pick the simplest orchestration you can actually operate. Production wants control, state, and human-in-the-loop more than it wants a role-play demo. The library is not the differentiator once traces, evals, and security are required.",
+    "LangGraph is my production default because state, interrupts, and checkpoints are explicit. CrewAI is useful for role-based research spikes. AutoGen is conversational and easy to overfit to a demo. Evaluation, traces, and security requirements are identical whichever library you pick, so the library is not the differentiator. Production Lisa would be LangGraph. I would not run all three in one path. At Retailetics the operable graph wins over the trend. Switching cost is real, so I spike with a metric and then commit.",
+    "Production Lisa is a LangGraph state machine, CrewAI stays a research spike, and we do not run AutoGen, CrewAI, and LangGraph in one production path.")
 add("How do you test agents without hitting real APIs?",
-    "Fake tools that return recorded answers. Assert the calls.",
-    "Contract tests, golden traces, simulators, property tests (no pay tool without confirm).",
-    "Replay a fixture: OOS milk → must call search_alternatives, must not pay.")
+    "Fake the tools, record the answers, and assert the calls. A golden trace is a unit test for behavior, not a transcript of a lucky demo. CI should never need a live payment API to prove that pay did not fire.",
+    "Contract tests check schemas, golden traces check tool sequences, and simulators return recorded inventory so CI never needs a live stock API. Property tests assert that pay never runs without confirm, and a fixture where milk is out of stock must search alternatives and must not pay. This is ordinary software testing applied to LangGraph, the same way FastAPI test clients already fake dependencies. I do not call production payment APIs from CI.",
+    "A fixture where milk is out of stock must call search_alternatives and must not call pay, which we replay without touching real inventory or payment APIs.")
 add("Supervisor / router / swarm topologies?",
-    "One boss, or a circle of peers. Boss is easier to debug.",
-    "Supervisor graph is the default. Swarms need stronger invariants.",
-    "Planner node dispatches retriever vs vision vs FAQ.")
+    "One boss is easier to debug than a circle of peers. Swarms need stronger invariants before I would put them on a trolley. A supervisor that dispatches specialists is the default until evaluation proves otherwise.",
+    "A supervisor graph is the default: a planner node dispatches retriever, vision, or FAQ specialists and collects results. Router topologies are a simpler special case of that. Swarms of peer agents create loops and unclear authority unless invariants are strict. I choose topology with traces and task-success metrics, not with a conference talk. Lisa's planner dispatching retriever versus vision versus FAQ is a supervisor. Extra peers would have to beat that baseline. Operability beats novelty on the shop floor.",
+    "A planner node dispatches retriever, vision, or FAQ work and collects results, which is a supervisor topology I can trace, unlike an unconstrained swarm.")
 add("What is a graph checkpoint and why?",
-    "A save-game of the agent so you can resume after a crash or a human pause.",
-    "LangGraph checkpointer (thread_id). Don't store PII unencrypted.",
-    "Shopper walks away mid-recipe; resume the same thread.")
+    "A checkpoint is a save-game of the agent so you can resume after a crash or a human pause. Without it, a shopper who walks away mid-recipe starts from zero.",
+    "LangGraph checkpointers store state by thread identifier so an interrupt or a process restart can resume. PII in checkpoints is encrypted and minimized. The shopper who walks away mid-recipe resumes the same thread on the tablet. This is the conversational analogue of WebSocket session resume, not a mysterious AI feature. I do not store card PAN in checkpoints. Thread identifiers stay per cart session rather than a global dict. Checkpoints make HITL practical because the graph can wait without forgetting.",
+    "If a shopper walks away mid-recipe, we resume the same LangGraph thread on the tablet instead of starting the recipe from zero.")
 
 # Evals / safety / MLOps senior
 add("What is MLOps for LLM apps (not only sklearn)?",
-    "Version prompts, tools, indexes, models. Eval, deploy, watch, rollback.",
-    "Artifacts: prompt id, embedding model, chunker, index build, agent graph. Quality+infra metrics. Canaries.",
-    "Merchant deploys plus prompt/model eval jobs, not only APKs.")
+    "You version prompts, tools, indexes, and models, then you evaluate, deploy, watch, and roll back. An APK ship is not the whole story once an assistant can change behavior without a binary.",
+    "Artifacts include prompt identifiers, embedding models, chunkers, index builds, and the agent graph. Quality metrics sit beside infrastructure metrics. Canaries and rollbacks are mandatory. Merchant deploys still matter for ezyCart, and they now sit next to prompt and model eval jobs rather than replacing them. This is MLOps for GenAI as I practice it as Lead GenAI at Retailetics. Colan-era backend performance work still informs how we watch p95, but the new artifacts are prompts and indexes. If you cannot roll back a prompt, you do not have MLOps.",
+    "Merchant deploys still ship APKs, and they now sit beside prompt and model evaluation jobs, because Lisa can change behavior without a new binary.")
 add("Offline vs online vs human eval?",
-    "Offline exam, live traffic shadows, people for gray cases.",
-    "You need all three. Online can surprise. Humans calibrate judges.",
-    "Weekly 50 human-labelled Lisa chats to keep the judge honest.")
+    "Offline is the exam, online is live traffic in shadow, and humans label the gray cases. You need all three, because each one lies in a different way.",
+    "Offline golden sets catch regressions before deploy. Online shadow and sampled live traffic catch distribution shift. Humans calibrate judges and label ambiguous allergen or complaint cases. A weekly slice of human-labelled Lisa chats keeps the judge honest. I would not replace humans with a judge model and call it done. FastAPI can log shadow outputs without showing them. The mix is how we avoid both lab theater and unmeasured production.",
+    "A weekly slice of human-labelled Lisa chats keeps the LLM judge honest, because online traffic will surprise you and a single judge model will drift.")
 add("Safety policies: self-harm, scams, medical, allergens?",
-    "Refuse and redirect. Allergens are high-stakes — no guessing.",
-    "Classifiers + rules + abstain. Legal review. Log. Don't rely on the base model alone.",
-    "If RAG has no allergen field, say so. Never 'probably fine'.")
+    "Refuse and redirect on self-harm, scams, and medical guesses, and treat allergens as high-stakes so you never invent a probably-fine answer. The base model alone is not a safety program. Classifiers, rules, abstain behavior, and legal review have to sit around it.",
+    "Layer classifiers, rules, and abstain behavior, then send the policy through legal review. Log refusals. If RAG has no allergen field, say so; never say probably fine. Self-harm and scam patterns refuse and redirect to human channels. Medical questions abstain without a source. Lisa is a shopping assistant, not a doctor. YOLO does not get a vote on an allergen claim. Safety is a gate on deploy, not a system prompt paragraph.",
+    "If RAG has no allergen field, Lisa says she does not know. She never answers that a food is probably fine, because that guess is a safety incident.")
 add("Jailbreaks vs prompt injection?",
-    "Jailbreak: user tries to break the system prompt. Injection: untrusted content tries to steer tools.",
-    "Different controls. Both red-teamed. Tools still allowlisted.",
-    "User 'ignore rules' vs document 'call discount tool'.")
+    "A jailbreak is the user trying to break the system prompt. Prompt injection is untrusted content trying to steer tools. They need different controls and they are both red-teamed.",
+    "Jailbreaks are handled with policy models, output filters, and refusal tests on user turns. Injection is handled by treating retrieved text as data, allowlisting tools, and ignoring tool syntax that did not come from our channel. Both sit in the red-team suite. User saying ignore rules is a jailbreak sample. A document saying call the discount tool is injection. MCP does not erase that distinction. Lisa's tools stay allowlisted regardless of how polite the attacking text is.",
+    "A user saying ignore the rules is a jailbreak sample, and a product document saying call the discount tool is prompt injection. Both are red-teamed, and tools stay allowlisted.")
 add("Data residency and vendor LLMs?",
-    "Where do the tokens go, and who can see them?",
-    "Contracts, regions, zero-retention, VPC endpoints, on-prem vLLM when required.",
-    "EU shopper chats may not go to a US-only endpoint without a decision.")
+    "You have to know where the tokens go and who can see them. Residency is a contract and an architecture, not a checkbox on a vendor slide. Region, zero-retention, and on-device vision are the practical controls I would put on the whiteboard.",
+    "Contracts, regions, zero-retention options, VPC endpoints, and on-prem vLLM when required are the controls. EU shopper chats may not go to a United States-only endpoint without a recorded decision. Edge vision on ONNX and TF Lite already keeps frames on the device under a sub-100ms budget, which is a residency-friendly pattern. FastAPI can route by tenant region. I do not invent a compliance certification we do not have. The interview answer is the decision process plus the data-flow diagram.",
+    "EU shopper chats may not go to a United States-only vendor endpoint without a recorded decision, while cart frames can stay on-device with ONNX and TF Lite.")
 add("Prompt/version governance?",
-    "Who can change the brain, with what evidence?",
-    "CODEOWNERS, eval required, change log, on-call.",
-    "Prompt v12 PR shows nDCG and groundedness vs v11.")
+    "Someone must own who can change the brain, and they must bring evidence. A prompt pull request without evaluation is an unreviewed API change. CODEOWNERS, a changelog, and a last-good identifier are how you keep cowboy edits out of production.",
+    "CODEOWNERS, required eval, a changelog, and an on-call owner sit on prompt and graph changes. A prompt version twelve pull request shows nDCG and groundedness against version eleven. Git is the source of truth, not a vendor playground. This is ordinary engineering governance applied to GenAI at Retailetics. I expect the same bar I would set as Principal AI: no silent edits. Rollback identifiers are part of the review. Governance is how you avoid cowboy creativity inventing ingredients.",
+    "A prompt version twelve pull request shows nDCG and groundedness against version eleven, and CODEOWNERS plus a required eval block a silent edit.")
 add("Drift in RAG (content drift vs embedding vs user drift)?",
-    "The books change, the map changes, or the questions change.",
-    "Monitor retrieval hit rates, unknown-intent, thumbs, fresh-doc lag.",
-    "New promo language not in the index → spike in abstains.")
+    "The books change, the map changes, or the questions change. Each drift needs a different monitor, and all three will happen in a live catalogue.",
+    "Content drift is new or edited documents and is watched with fresh-doc lag and retrieval of known ids. Embedding drift is a model or chunker change and needs a re-index. User drift is new phrasing and is watched with unknown-intent rate and thumbs. A new promo language that is not in the index shows up as a spike in abstains. Lisa's recipes RAG needs all three monitors because menus, embeddings, and shopper slang all move. Drift is an MLOps problem, not a one-time ingest.",
+    "When new promo language is missing from the index, abstains spike, which is content drift, and Lisa should refuse rather than invent the missing deal.")
 add("Cost accounting per tenant?",
-    "Each store should see its LLM bill.",
-    "Token meters, cache hits, GPU-ms, pass-through + margin. Quotas.",
-    "A viral recipe loop cannot bankrupt the platform — quota + 429.")
+    "Each store should see its LLM bill. A viral recipe loop must not unbounded-bill the platform, so you have quotas, honest meters, and a 429 when a tenant runs away. Accounting is how finance and on-call share a number.",
+    "We meter tokens, cache hits, and GPU milliseconds per tenant, then apply quotas and a 429 when a loop runs away. Pass-through plus margin is a business choice; the engineering requirement is that the meter exists. I do not invent a dollar amount for the platform. Colan-scale work with about five hundred thousand users taught the need for backend cost and performance discipline, including about forty percent faster backends, and token metering is the GenAI continuation of that. Lisa's recipe loop is the failure story I use. Accounting is how finance and on-call share a number.",
+    "A viral recipe loop cannot unbounded-bill the platform, because each tenant has a token quota and the gateway returns 429 when the loop runs away.")
 add("Feature flags for models?",
-    "Flip brains without a full redeploy.",
-    "Flags for prompt, temperature, reranker on/off, model id. Combine with canary.",
-    "Turn off reranker if GPU pool is hot; accept quality hit explicitly.")
+    "You flip brains without a full redeploy. Flags cover prompt, temperature, reranker, and model identifier, and they combine with canaries so rollback is a switch. Each flag needs an owner and a default-safe value or the matrix becomes untestable.",
+    "Flags let us turn a reranker off if the GPU pool is hot and accept the quality hit explicitly. They also pin a prompt id and a model id per tenant or cohort. Canary plus flag is how rollback becomes a switch. ezyCart already needs this for ONNX vision models on device; server LLMs get the same treatment. FastAPI reads flags at request start so a session is consistent. I do not combine flags into an untestable matrix. Each flag has an owner and a default-safe value.",
+    "We can turn the reranker off if the GPU pool is hot, accept the quality hit explicitly, and keep Lisa up rather than waiting for a full redeploy.")
 add("Shadow mode?",
-    "New brain answers in the log, old brain still talks to the shopper.",
-    "Compare distributions, then graduate. Privacy in logs.",
-    "v12 drafts Lisa answers 10% shadow before cutover.")
+    "The new brain answers in the log while the old brain still talks to the shopper. You compare distributions, then you graduate the new path. Privacy rules still apply to those logs, because shadow mode is not an excuse to keep raw PII.",
+    "Shadow traffic scores the candidate prompt or model without changing the user-visible answer. Privacy rules still apply to logs. A version twelve Lisa can draft on a slice of traffic before cutover. Shadow plus eval plus canary is the promotion path. FastAPI can fork a shadow span with redaction. I never skip privacy because it is only a log. Shadow mode is how you learn without gambling the floor.",
+    "Version twelve can draft Lisa answers on a slice of shadow traffic before cutover, while shoppers still hear the current production prompt.")
 add("Rollback of an index?",
-    "Bad embed job? Point search back at yesterday's index.",
-    "Immutable index builds, alias swap, keep N generations.",
-    "Alias 'catalogue-live' → build-2026-10-28.")
+    "If an embed job goes bad, you point search at yesterday's index. Immutable builds and alias swaps make that a one-line change rather than a panic rebuild.",
+    "Index builds are immutable, aliases swap, and we keep N generations. catalogue-live can point at build-2026-10-28 and point back if recall collapses. Recipes RAG indexes follow the same alias pattern. Rollback is tested, not hoped. This matches ONNX alias rollback on device. Ten million documents make rebuild time a reason to keep prior generations on disk. Search aliases are as important as prompt ids.",
+    "The catalogue-live alias points at an immutable build, and we keep prior generations so a bad embed job is an alias swap rather than a night of unreplicable panic.")
 add("Eval for agents: success rate of trajectories?",
-    "Not only pretty text — did the tools do the right thing?",
-    "Exact tool sequence, arg match, end state, side-effect counts.",
-    "Success = missing pasta sauce added once, not twice, not paid.")
+    "Pretty text is not success. Success is the tools doing the right thing, once, with the right arguments, and landing in the right end state. Golden trajectories make that a CI gate instead of a demo you remember fondly.",
+    "I score exact tool sequence, argument match, end state, and side-effect counts. Missing pasta sauce added once is success; added twice or paid is failure. Golden traces make this CI. LangGraph spans are the evidence. This is stricter than chatbot BLEU and it should be. Lisa is an operator of cart tools, not a poet. Trajectory eval is how agent quality becomes a gate.",
+    "Success is that missing pasta sauce is added once, not twice, and that pay is not called, which a golden trajectory can assert in CI.")
 add("Red teaming cadence?",
-    "Schedule attacks: injection, PII, jailbreak, cost bombs, loops.",
-    "Automated suite in CI plus quarterly human red team. Track coverage.",
-    "Suite includes 'ignore previous instructions' in a product HTML comment.")
+    "Schedule the attacks: injection, PII, jailbreak, cost bombs, and loops. Cadence means CI plus a slower human exercise, not a one-off scary demo.",
+    "An automated suite runs in CI, and a quarterly human red team goes deeper. We track coverage so the same three prompts are not the whole program. The suite includes ignore previous instructions hidden in a product HTML comment. Lisa's discount and pay tools are always in scope. Cadence is what makes red teaming a control. I would rather show a boring coverage table than a single clever jailbreak anecdote.",
+    "The automated suite includes ignore previous instructions hidden in a product HTML comment, and Lisa's discount and pay tools are always in that scope.")
 add("Guardrails vs fine-tune vs policy model?",
-    "Rules on the outside, or a model trained to behave, or both.",
-    "Layered: regex/PII → policy classifier → base LLM → output filter.",
-    "Output filter strips accidental card numbers even if the LLM slipped.")
+    "Put rules on the outside, optionally train a model to behave, and still filter the output. Layers fail closed when any layer is unsure. Fine-tuning tone does not replace allowlisted tools or an output filter that strips a leaked card number.",
+    "The stack is regex and PII detection, then a policy classifier, then the base LLM, then an output filter. Fine-tuning a policy model can help tone and refusal style, but it does not replace allowlisted tools. An output filter still strips accidental card numbers if the LLM slipped. Lisa gets all layers. I do not claim a custom safety model we did not build. Layering is the honest Principal AI answer.",
+    "An output filter still strips accidental card numbers even if the LLM slipped, because guardrails sit outside the model rather than trusting a system prompt.")
 add("What should block an AI deploy?",
-    "Failed tests, eval regressions, secret scan, vuln, missing canary plan.",
-    "Write the gate list. Quality is a blocker, not a dashboard nice-to-have.",
-    "Groundedness -3% blocks. Copy tweak that doesn't touch eval may still need review.")
+    "Failed tests, eval regressions, secret scans, vulnerabilities, and a missing canary plan should block. Quality is a blocker, not a dashboard nice-to-have.",
+    "I write the gate list: unit and contract tests, retrieval and faithfulness deltas, safety suites, secret scanning, dependency vulnerabilities, and a documented canary with rollback. A groundedness drop on the order of a few percent blocks. A copy tweak that does not touch eval may still need review if it faces shoppers. This is the same bar I would set as Principal AI at Retailetics. APK gates from mobile work still apply, and prompts join them. If it cannot roll back, it cannot ship.",
+    "A groundedness regression blocks the deploy, and even a copy tweak that faces shoppers still needs review, because quality is a gate rather than a chart.")
 
 # Serving / systems
 add("Prefill vs decode and why TTFT cares?",
-    "Prefill reads the prompt; decode writes the next word. First word waits on prefill.",
-    "Long RAG prompts kill TTFT. KV cache helps later tokens more than the first.",
-    "Cut system+history+chunks before buying more GPUs.")
+    "Prefill reads the prompt; decode writes the next word. The first word waits on prefill, which is why a fat RAG prompt feels broken even when tokens per second look fine later.",
+    "TTFT is mostly queue time plus prefill of system, history, and chunks. KV cache helps later tokens more than the first token of a new prompt, unless prefix cache hits a stable prefix. Long RAG prompts kill TTFT, so I cut packing before I buy more GPUs. Lisa should not send forty chunks if five will do. Tracking TTFT separately from total latency keeps this honest. Serving math starts here. A chatbot that streams slowly on the first byte has a prefill problem, not a copy problem.",
+    "Cut system prompt, history, and chunks before buying more GPUs, because Lisa's first token waits on prefill of a fat window more than it waits on decode speed.")
 add("Continuous batching vs static batch?",
-    "Seat new diners as seats free, don't wait for a full table of 8.",
-    "vLLM paged attention. Fairness vs utilization. Deadlines.",
-    "Many Lisa sessions share a GPU without waiting for lockstep.")
+    "Seat new diners as seats free instead of waiting for a full table of eight. Continuous batching is how many Lisa sessions share a GPU without lockstep.",
+    "vLLM-style paged attention lets new requests join a running batch. The trade-off is fairness versus utilization, and deadlines still apply so a giant prompt cannot starve interactive chat. Many Lisa sessions share a GPU this way. Static batching is simpler and slower to fill. I explain this as an operations choice with SLOs, not as trivia. FastAPI in front still needs backpressure when the batcher is full. Continuous batching is why open-source serving can hold interactive traffic.",
+    "Many Lisa sessions share a GPU without waiting for lockstep, because continuous batching seats new requests as KV pages free rather than waiting for a static eight-wide batch.")
 add("Speculative decoding?",
-    "A small model guesses a few tokens; the big one checks.",
-    "Helps decode speed when draft is good. Extra complexity.",
-    "Useful on FAQ-like chats; less if outputs are highly random.")
+    "A small model guesses a few tokens and the large model checks them. It helps decode speed when the draft is good, and it adds complexity when outputs are highly random.",
+    "Speculative decoding is a decode-time speedup, not a prefill miracle. It pays when the draft model agrees with the target often, which is more true for FAQ-like chats than for highly creative text. Extra serving complexity has to beat a simpler route to a smaller model. I would trial it behind a flag with TTFT and tokens-per-second on the Lisa FAQ route. I would not claim a production speedup we did not measure. It is a tool, not a default.",
+    "Speculative decoding is more useful on FAQ-like Lisa chats than on highly random outputs, and I would only keep it if a flagged trial moved TTFT and tokens per second.")
 add("Multi-LoRA serving?",
-    "Many small adapters on one base model.",
-    "vLLM LoRA slots. Memory vs convenience. Don't mix tenants' adapters by accident.",
-    "Per-merchant tone adapter; shared catalogue RAG.")
+    "Many small adapters can sit on one base model. You still must not mix tenants' adapters, because tone is not an excuse to leak another merchant's behavior.",
+    "vLLM LoRA slots trade memory for convenience. Per-merchant tone adapters can share a base while catalogue RAG stays shared and permissioned. Mixing adapters by accident is a tenancy bug. I would rather a single well-eval'd adapter than a zoo. Recipes RAG remains the source of facts; LoRA is style or a stable skill. Multi-LoRA is an infrastructure choice with an isolation story. Principal AI review asks who can enable an adapter.",
+    "A per-merchant tone adapter can share a base model while catalogue RAG stays shared and permissioned, and we must not mix tenants' adapters by accident.")
 add("GPU vs CPU vs NPU placement?",
-    "Big GPUs in the cloud. NPU/CPU on the cart. Don't mix jobs blindly.",
-    "Profile. Thermal. Batch. Precision.",
-    "YOLO on NPU; LLM on GPU; BM25 on CPU.")
+    "Big GPUs live in the cloud for LLMs, while NPU and CPU live on the cart for vision and lexical search. You profile thermals, batch size, and precision instead of mixing jobs blindly. Sending every camera frame to a cloud GPU is how you miss the sub-100ms budget.",
+    "YOLO and RT-DETR run on device NPU or CPU with ONNX or TF Lite under a sub-100ms budget. BM25 is a CPU problem. LLMs sit on GPUs with batching. Thermal, batch, and precision constraints differ at the edge versus in the rack. ezyCart is this split in production. I would not send every camera frame to a cloud GPU. Placement is an SLO and a battery story, not a brand preference.",
+    "YOLO runs on the cart NPU, the LLM runs on a cloud GPU, and BM25 runs on CPU, which is how ezyCart keeps vision inside a sub-100ms on-device budget.")
 add("Backpressure when GPUs are full?",
-    "A waiting line with a max length, then say 429/503, don't melt.",
-    "Queue+timeout+shed. Load balancer least-outstanding. Degradation: smaller model.",
-    "If vLLM queue > 200ms p95, route FAQs to cache only.")
+    "Keep a waiting line with a maximum length, then say 429 or 503 instead of melting. Shed load to a smaller model or a cache before you drop interactive traffic silently.",
+    "Queues have timeouts. Load balancers prefer least outstanding requests. Degradation routes FAQs to cache when vLLM p95 queue wait exceeds a tight budget. Lisa should fail loudly rather than pile frames of prompts. This matches WebSocket backpressure on carts and camera latest-frame policy. FastAPI returns the 429; Spring Boot gateways can shed IoT bursts separately from chat. Backpressure is part of the SLO, not an embarrassment.",
+    "If the vLLM queue wait exceeds a tight p95 budget, we route FAQs to cache only and return 429 rather than letting Lisa pile prompts until the GPU melts.")
 add("How do you design multi-region LLM?",
-    "Don't put one GPU in one basement for the planet.",
-    "Sticky sessions vs stateless. Data residency. KV cache is regional. Failover.",
-    "MY vs IN shoppers — residency + latency.")
+    "Do not put one GPU in one basement for the planet. Regions follow residency and latency, KV cache is regional, and failover is explicit. Sticky sessions help prefix cache, but they must not make a region failure undraggable.",
+    "Sticky sessions help prefix cache but hurt failover; stateless routing is simpler and slightly colder on cache. Data residency can force a region even when another GPU pool is cheaper. Malaysia versus India shoppers on ezyCart need that conversation in the design, not after a lawyer emails. I do not invent a multi-region spend figure. FastAPI at the edge of each region talks to a regional model pool. Multi-region is cells plus policy, not a global in-memory dict.",
+    "Malaysia versus India shoppers raise residency and latency together, so KV cache and model pools stay regional rather than assuming one GPU basement for every store.")
 add("Exactly-once LLM side effects?",
-    "You usually can't. Make tools idempotent; accept at-least-once.",
-    "Outbox pattern, keys, at-least-once tools.",
-    "Retry add_to_cart with the same key after a 502.")
+    "You usually cannot have exactly-once model calls. You make tools idempotent and you accept at-least-once delivery with an outbox and stored results. Promising exactly-once tokens from a vendor API is how you get a double charge in production.",
+    "The outbox pattern, idempotency keys, and at-least-once tools are the design. Retry add_to_cart with the same key after a 502. This is backend truth that agents inherit. WebSocket blips already taught us duplicate scans if sequence identifiers are missing. I will not promise exactly-once tokens from a vendor API. Side effects live in our systems of record. The interview wants that humility plus a key.",
+    "We retry add_to_cart with the same idempotency key after a 502, because tool delivery is at-least-once and a second charge would be a product incident.")
 add("Schema evolution for tool JSON?",
-    "Add optional fields; don't rename in place.",
-    "Version tools. Agents pin a version. Pydantic extra=forbid on money tools.",
-    "add_to_cart v2 adds notes?: str optional.")
+    "Add optional fields and do not rename in place. Version the tool, pin agents to a version, and forbid extra fields on money tools so a model cannot smuggle a discount into an unknown key. Tool schemas are public APIs for models, and they evolve like FastAPI contracts.",
+    "Pydantic extra-forbid on payment and cart mutations. add_to_cart version two may add an optional notes string. Agents pin a schema version so a rolling deploy does not half-understand a payload. FastAPI and Spring Boot already version public APIs; tools are public APIs for models. I reject unknown fields on money paths. Evolution is documented in the ADR beside the graph. Compatibility is a test, not a hope.",
+    "add_to_cart version two may add an optional notes string, while money tools still forbid extra fields so a model cannot smuggle a discount into an unknown key.")
 add("How do you do CI for prompts?",
-    "PR runs the golden set. Numbers in the comment.",
-    "Fail on delta. Store traces as artifacts. Don't call prod keys in CI if avoidable — use recorded fixtures + a cheap model.",
-    "GitHub Action: pytest + ragas/langsmith eval.")
+    "A pull request runs the golden set and posts the numbers in the comment. CI uses fixtures and a cheap model when it can, not production keys on every commit.",
+    "A pull request fails the build on a quality delta, stores traces as artifacts, and can run pytest plus a Ragas or LangSmith eval subset in GitHub Actions. Recorded fixtures keep CI deterministic, and production keys stay out of the default path. Lisa's golden set is the gate because prompt CI is how we treat text like code. Reviewers read the delta table, not only the new wording.",
+    "A GitHub Action runs pytest plus a retrieval and faithfulness eval subset, and the pull request comment shows the delta so a prompt change is reviewed as code.")
 add("Canary a vision model on devices?",
-    "1% of carts get the new ONNX, rest stay.",
-    "Device cohorts, crash/thermal/mAP-proxy, instant disable flag.",
-    "Night shift cohort first — lighting is harsher.")
+    "A small cohort of carts gets the new ONNX build while the rest stay. You watch crashes, thermals, and a proxy for accuracy, and you keep an instant disable flag.",
+    "Device cohorts, night-shift lighting, crash rate, thermal throttling, and an mAP proxy decide promotion. The flag disables the new YOLO or RT-DETR file instantly. Night shift is a good first cohort because lighting is harsher. Sub-100ms is still the budget. This is the edge analogue of a server model canary. I do not roll a vision model to every trolley at once. Canary is how indoor cameras stop being a fleet-wide incident.",
+    "A night-shift cohort gets the new ONNX first because lighting is harsher, and an instant disable flag rolls back YOLO or RT-DETR without waiting for an app-store cycle.")
 add("Feature store vs just SQL?",
-    "A feature store is a disciplined way to get the same features at train and serve.",
-    "Worth it at scale/many models. Overkill for one XGBoost.",
-    "Promo propensity features in Databricks; checkout SKU is not a feature store problem.")
+    "A feature store is a disciplined way to get the same features at train and serve. It is worth it at scale with many models, and it is overkill for one XGBoost on a single table.",
+    "Promo propensity features might belong in a warehouse-centric feature store. Checkout SKU truth is a SQL and API problem, not a feature-store problem. Train/serve skew is the reason the store exists. I would not stand up a feature platform to look modern. Lisa's live price is SQL. Principal AI judgment is using the simpler truthful path. Cost of a platform has to beat a well-tested SQL path.",
+    "Promo propensity features may live in a warehouse feature path, but checkout SKU and live price are SQL and API problems, not a reason to stand up a feature store.")
 add("Online vs offline features for XGBoost?",
-    "Offline: batch tables. Online: low-latency lookup at request.",
-    "Skew if code paths differ. Point-in-time correctness.",
-    "Don't train on a rolling 30d average that isn't available live.")
+    "Offline features come from batch tables. Online features are a low-latency lookup at request time. If the code paths differ, you have skew, and the model was trained on a fantasy.",
+    "Point-in-time correctness matters. Do not train on a rolling thirty-day average that is not available live. Trading work in TAN Intelligence as an independent venture uses walk-forward hygiene for the same reason, with Pine and Python, and I would not shuffle a time split. Retail promo models need the same honesty. Document which features are online. Skew is a silent production killer. The interview wants that split named.",
+    "Do not train on a rolling thirty-day average that is not available live at request time, because that is train/serve skew dressed up as a better feature.")
 
 # System design / leadership (from playbooks)
 add("Design an enterprise RAG assistant (whiteboard).",
-    "Secure librarian: permissions, pages, quotes, grades.",
-    "Users, SLOs, ingest, chunk, hybrid, rerank, ACL, grounded gen, citations, eval, telemetry, delete/update, cost. Trade-offs.",
-    "Sources → indexes → retrieve → rerank → LLM → validate → telemetry.")
+    "Draw a secure librarian: who may read, which pages, which quotes, and how we grade the answers. Then walk ingest, retrieve, generate, and delete as one system.",
+    "I start with users, tenants, and SLOs, then ingest, structure-aware chunking, hybrid retrieval, rerank, ACL, grounded generation, citations, evaluation, telemetry, updates, deletes, and cost. Trade-offs are named out loud: latency versus recall, shared versus per-tenant indexes, and abstain versus a helpful guess. Lisa and recipes RAG are the concrete retail instance of this whiteboard. I would not skip permissioning to look faster. The diagram is sources to indexes to retrieve to rerank to LLM to validate to telemetry. That is the Principal AI sketch I want on the board.",
+    "The whiteboard path is sources, indexes, retrieve, rerank, LLM, validate, and telemetry, with ACL on retrieve and citations on generate, which is Lisa's recipes RAG drawn as an enterprise assistant.")
 add("Design a tool-using agent (whiteboard).",
-    "Approved tools, stop rules, human for danger.",
-    "State machine, schemas, least privilege, budgets, HITL, persistence, traces, deterministic fallback, idempotent tools.",
-    "Search inventory freely; purchase requires confirmation.")
+    "Approved tools, stop rules, and a human for danger. The board should look like a state machine with budgets, not like a cloud of talking heads.",
+    "I draw a state machine, JSON schemas, least privilege, step and token budgets, human-in-the-loop, persistence, traces, deterministic fallbacks, and idempotent tools. Search inventory can be free. Purchase requires confirmation. Lisa is that drawing on a trolley. LangGraph is the implementation I would name. FastAPI executes tools after validation. The whiteboard fails if pay can be reached from retrieved text. Operability is part of the design, not a later story.",
+    "Search inventory freely, and purchase requires confirmation. That is the Lisa whiteboard: an allowlisted state machine rather than an unconstrained swarm.")
 add("Design a real-time vision pipeline (whiteboard).",
-    "Camera → prepare → recognize → event. Watch FPS and end-to-end ms.",
-    "Capture, preprocess, infer, post, track, timestamp, backpressure, device metrics, fallback.",
-    "ezyCart: frame to SKU event on WebSocket under 100ms model budget.")
+    "A real-time vision pipeline is camera, then prepare, then recognize, then emit an event. You watch frames per second and end-to-end milliseconds, because a trolley cannot queue a second of stale reality.",
+    "I draw capture, preprocess, infer, postprocess, track, timestamp, backpressure, device metrics, and fallback. ezyCart takes a frame to a SKU event on WebSockets under a sub-100ms model budget with YOLO or RT-DETR on ONNX or TF Lite. Latest-frame policy drops backlog. FastAPI or Spring Boot receives the event, not a raw video warehouse. I do not invent a hardware bill. The board must show failure when confidence is low. Vision is a pipeline with SLOs, not a model file.",
+    "On ezyCart a frame becomes a SKU event on a WebSocket under a sub-100ms model budget, with YOLO or RT-DETR on ONNX or TF Lite and a latest-frame drop policy.")
 add("Design WebSockets for thousands of carts.",
-    "Many phone calls. Don't let one bad cart kill the PBX.",
-    "Shard by store, heartbeats, backpressure, sticky vs broker (Kafka), replay, auth per device, horizontal gateways.",
-    "IoT gateway Spring Boot/FastAPI, partition key store_id.")
+    "Think of many phone calls, and do not let one bad cart kill the exchange. Shard by store, send heartbeats, apply backpressure, and authenticate every device. Sequence identifiers and horizontal gateways are what make thousands of trolleys operable.",
+    "We shard by store, send heartbeats, apply backpressure, choose sticky sockets versus a broker such as Kafka, support replay, and authenticate per device. Horizontal gateways sit in Spring Boot or FastAPI with partition key store_id. Sequence identifiers prevent duplicate scans. This is the ezyCart IoT path that Lisa and vision events share. Thousands of carts is a gateway and broker problem before it is an AI problem. I keep AI overlays off the critical heartbeat path. Capacity is connection count plus message rate, not a ChatGPT metaphor.",
+    "The IoT gateway in Spring Boot or FastAPI shards by store_id, heartbeats each cart, and replays by sequence identifier so one bad trolley does not take down the store.")
 add("Investigate a slow API (senior).",
-    "Find the slow station with traces, not guesses.",
-    "Compare baseline, traces, EXPLAIN, deps, resources, reproduce load, one fix.",
-    "SQL 80% of p95 — index, don't rewrite FastAPI.")
+    "Find the slow station with traces instead of guessing. Compare to a known-good baseline, read EXPLAIN, check dependencies, reproduce under load, and change one thing at a time. If SQL is most of p95, you index before you rewrite the framework.",
+    "I compare against a known good baseline, pull distributed traces, run EXPLAIN on suspects, check dependencies and resources, reproduce under load, then apply one fix. If SQL is most of p95, I index or rewrite the query before I rewrite FastAPI. Colan-era work that made backends about forty percent faster started from measurement, not from a framework swap. Lisa's chat p95 is a different budget from cart event p95. Senior debugging is a method. I narrate the method in the interview because that is the job.",
+    "If SQL is most of p95 I add the index or fix the query before I rewrite FastAPI, because the slow station is in the trace, not in a guess about the framework.")
 add("Deduplicate records in Python (talk through).",
-    "Remember ids you've seen; keep first or last — say which.",
-    "O(n) set. Define collision policy. Stable sort if needed.",
-    "seen=set(); for e in events: if e.id not in seen: keep.")
+    "Remember identifiers you have seen and keep first or last according to a stated policy. Say the policy out loud, because first versus last changes a charge.",
+    "An O of n set keyed by event identifier is the default. Collision policy is explicit: keep first for charges, keep last for the latest cart snapshot if that is the rule. Stable sort first if arrival order is required. Device event identifiers already need this so a duplicate scan is not charged twice. I would write the loop on the board rather than wave at pandas. Tests cover duplicates at start, middle, and end. This is intern-level code with senior-level policy.",
+    "We keep a seen set of event identifiers and skip duplicates so the same scan is not charged twice, and we say whether we keep the first or the last when identifiers collide.")
 add("Bounded retry pattern?",
-    "Retry a few times with waits, then fail. Don't retry forever. Don't retry non-idempotent blindly.",
-    "jittered exponential backoff, retry-after, max attempts, classify retryable errors.",
-    "429/503 yes; 400 validation no.")
+    "Retry a few times with jittered waits, then fail. Do not retry forever, and do not retry a non-idempotent call blindly. Classify 429 and 503 as retryable and treat a 400 validation error as a bug, not a blip.",
+    "Jittered exponential backoff, honor Retry-After, cap attempts, and classify retryable errors. 429 and 503 yes; 400 validation no. Tool calls that mutate need idempotency keys. WebSocket reconnects for carts use the same pattern. Lisa's get_stock may retry; pay does not retry without a key and a human confirm. Bounded retry is an SRE habit in agent clothing. Unbounded retry is a loop incident.",
+    "429 and 503 are retryable with jittered backoff; a 400 validation error is not. Pay does not retry without an idempotency key and a confirm.")
 add("SQL index example you can write?",
-    "CREATE INDEX ... then EXPLAIN.",
-    "Composite order, covering indexes, write cost.",
-    "CREATE INDEX idx_orders_customer_id ON orders(customer_id);")
+    "You should be able to write CREATE INDEX and then EXPLAIN. Talk about composite order, covering indexes, and write cost so it does not sound memorized.",
+    "A single-column index on customer_id is the whiteboard starter. Composite order follows the query, covering indexes trade write cost for read speed, and extras still hit the heap. I would EXPLAIN a slow orders lookup before adding a second index. Live price and stock stay in SQL even when RAG mentioned an old price. Indexing is how Colan-scale backends got faster, including the about forty percent backend improvement, not by guessing. I can write the statement and the reason.",
+    "CREATE INDEX idx_orders_customer_id ON orders(customer_id) is the starter, and I follow it with EXPLAIN so we know whether the planner actually uses it.")
 add("How do you make architecture decisions?",
-    "Requirements, options, risks, cost, write it down, test.",
-    "ADRs. Bake-offs. Revisit. Edge vs cloud, chain vs agent.",
-    "YOLO vs RT-DETR decided by mAP+ms on store video.")
+    "Write down requirements, options, risks, and cost, then test the fork on a metric. Architecture Decision Records turn a debate into a decision you can revisit when the evidence changes. Bake-offs beat framework wars on the shop floor.",
+    "I run bake-offs on a metric, record the ADR, and revisit when evidence changes. Edge versus cloud and chain versus agent are typical forks. YOLO versus RT-DETR is decided by mean average precision and milliseconds on store video, not by a Twitter thread. Recipes RAG chose LangChain and LlamaIndex after we could retrieve and cite, not because a blog said so. Principal AI work is making those calls explicit. Revisit is allowed; amnesia is not.",
+    "YOLO versus RT-DETR was decided by accuracy and milliseconds on store video, which is the same ADR habit I use for chain versus agent.")
 add("Production incident response?",
-    "Stop the leak, then find the hole, tell people, learn without blame.",
-    "Mitigate → diagnose → recover → RCA. Metrics first: error, latency, GPU, queue.",
-    "Missing device events: net, broker, schema, last deploy, replay by event id.")
+    "Stop the leak, then find the hole, tell people, and learn without blame. Metrics come before theories: error rate, latency, GPU saturation, and queue depth first. A blame-free RCA is how the next incident still gets reported.",
+    "Mitigate, diagnose, recover, then write an RCA. I look at error rate, latency, GPU saturation, and queue depth first. Missing device events send me to network, broker, schema, last deploy, and replay by event identifier. Lisa incidents add prompt id, index alias, and tool error rate. Communicate early. Blame-free RCA is how a team keeps reporting. On-call for GenAI is still incident response, not prompt poetry.",
+    "Missing device events send me to network, broker, schema, last deploy, and replay by event identifier before I blame the model, because most trolley incidents are still systems incidents.")
 add("Engineering disagreement?",
-    "Shared goal, evidence, maybe a test, record the call.",
-    "Disagree and commit. No ego bake-offs.",
-    "Two retrievers on the same golden set.")
+    "Share the goal, bring evidence, maybe run a test, and record the call. Then disagree and commit without an ego bake-off. Two retrievers on the same golden set is a disagreement I can respect; a louder anecdote is not.",
+    "Two retrievers on the same golden set is a disagreement I can respect. A louder anecdote is not. ADRs capture the losing option so we can reopen with data. I have no interest in winning a framework war that does not move Lisa's faithfulness. Principal AI facilitation is getting the eval on the table. Commit after the decision so the shop floor is not a fork. Disagreement is useful when it produces a number.",
+    "If two retrievers disagree, they run on the same golden set, and we record the winner in an ADR instead of turning Lisa into an ego bake-off.")
 add("How do you mentor?",
-    "Why, then how, then they drive.",
-    "Slices, reviews, increasing ownership. Teach trade-offs.",
-    "Pair on API design; they present the ADR.")
+    "Explain why, then how, then let them drive. Mentoring is increasing ownership with reviews, not typing for them forever. A junior who presents the ADR learns more than one who watches me type, and the quality bar still stays with the team.",
+    "I pair on slices, review in public, and hand over ADRs they can present. Trade-offs are the lesson, not a secret keystroke. A junior who presents the API design learns more than one who watches me type FastAPI. Lisa evals are a good teaching artifact because the number is shared. Mentoring at Principal level is multiplying people who can say no to unmeasured agents. I still touch the critical path so the advice is real.",
+    "We pair on API design and they present the ADR, which is how ownership moves without leaving Lisa's quality bar as tribal knowledge.")
 add("How do you prioritize?",
-    "Impact, risk, urgency, effort. Brakes before paint.",
-    "Make trade-offs visible. Kill zombie work.",
-    "Checkout correctness > cosmetic dashboard.")
+    "I prioritize by impact, risk, urgency, and effort, and I put brakes before paint. I make the trade-off visible on a shared board and kill zombie work that does not move a shopper-facing SLO. Checkout correctness beats a cosmetic dashboard every time.",
+    "Checkout correctness beats a cosmetic dashboard. A faithfulness hole beats a new agent framework. I show the queue so PMs can argue with the same board. Colan taught the value of performance and stability for about five hundred thousand users, including about seventy percent ANR reduction and about thirty percent performance improvement, which is brakes-before-paint in mobile form. ezyCart checkout is the same rule. Prioritization is a quality of a Principal AI, not a personal kanban aesthetic.",
+    "Checkout correctness beats a cosmetic dashboard, and a faithfulness hole in Lisa beats introducing a new agent framework that does not yet have an eval.")
 add("Tell me about a failure (framework)?",
-    "Real story: situation, my part, impact, fix, process change. Don't invent.",
-    "STAR. What you'd do differently.",
-    "Use a genuine integration/perf miss — e.g. missed seq-id causing duplicate scans in staging.")
+    "Tell a real story with situation, your part, impact, fix, and a process change. Do not invent a tragedy, do not invent a dollar loss, and do not hide your role. Interviewers are listening for ownership and for what you changed so the miss cannot repeat.",
+    "I use STAR and I say what I would do differently. A genuine integration miss such as a missing sequence identifier that caused duplicate scans in staging is the right shape: concrete, bounded, and process-changing. I would not invent a dollar loss. I would not blame a teammate to look senior. The process change is the point, such as replay tests and idempotency keys. Interviewers are listening for ownership. I keep the story in systems I actually touched at Retailetics.",
+    "A missed sequence identifier that caused duplicate scans in staging is a real failure shape: I own the gap, we fixed replay and keys, and I do not invent a dollar loss to make it sound larger.")
 add("How do you measure project success?",
-    "Did people get the job done, reliably, at acceptable cost — not 'the model exists'.",
-    "Adoption, task completion, quality, latency, reliability, cost, risk.",
-    "Lisa: answer quality, add-to-cart success, TTFT, $.")
+    "Success is people getting the job done, reliably, at acceptable cost. The model existing is not success. Adoption, task completion, quality, latency, and risk have to sit on the same scoreboard as the demo.",
+    "I look at adoption, task completion, quality, latency, reliability, cost, and risk. Lisa is answer quality, add-to-cart success, TTFT, and dollars per successful task. ezyCart also has scan correctness and sub-100ms vision. I do not invent a revenue figure. Principal AI success is those SLOs plus the ability to roll back. A demo without meters is a prototype. The interview should hear the meters first.",
+    "Lisa's success is answer quality, add-to-cart success, time to first token, and dollars per successful task, not the fact that a model is wired up.")
 add("Why should we hire you as Principal AI?",
-    "I connect models, retrieval, agents, APIs, edge vision, and apps — and I can say no to fake metrics.",
-    "13+ years, Principal AI / Lead GenAI & Agentic at Retailetics, ezyCart+RAG+edge, $2M nav, TAN R&D, mobile supporting. 90-day plan: evals+SLOs first.",
-    "AI + systems + delivery. Honest about tools I have not run at scale.")
+    "I connect models, retrieval, agents, APIs, edge vision, and applications, and I can say no to fake metrics. That mix is the job, not a single vendor badge.",
+    "I am Principal AI and Lead GenAI at Retailetics, where ezyCart, Lisa, recipes RAG with LangChain and LlamaIndex, YOLO and RT-DETR, Kimera-VIO indoor navigation versus beacons, FastAPI and Spring Boot WebSockets, and ONNX and TF Lite under a sub-100ms budget all have to work together. I also carry mobile-scale lessons from about five hundred thousand users, including about seventy percent ANR reduction, about thirty percent performance improvement, and about forty percent faster backends. TAN Intelligence is an independent venture with six years of custom indicators, Telegram alerts on five-minute and fifteen-minute charts, Pine and Python, and sub-five-percent drawdown discipline, and it is not an employer. A ninety-day plan would put evals and SLOs first. I am honest about tools I have not operated at ten million documents. Hire me for AI plus systems plus delivery.",
+    "The hire case is AI plus systems plus delivery on ezyCart and Lisa, with honest scope about tools I have not run at ten million documents, rather than a list of badges.")
 add("How do you answer when you have not used a tool deeply?",
-    "Say conceptual vs hands-on, map to a pattern, propose a 1-week spike with metrics. Don't bluff.",
-    "Interviewers reward learning plans over theater.",
-    "'I have hybrid search in prod; I have not operated X at 10M docs; here's the POC.'")
+    "Say what is conceptual versus hands-on, map it to a pattern you do know, and propose a one-week spike with metrics. Do not bluff. Interviewers reward a learning plan over theater, and calibrated honesty is part of Principal AI credibility.",
+    "Interviewers reward a learning plan over theater. I have hybrid search in production on recipes RAG; if I have not operated a particular vendor at ten million documents, I say so and I describe the proof of concept. Mapping to ingest, retrieve, rerank, and eval keeps the conversation senior. I would rather win trust than win a namedrop. Principal AI credibility is calibrated honesty. A spike with recall at k is a plan; a smile is not.",
+    "I would say I have hybrid search in production, I have not operated that particular vendor at ten million documents, and here is a one-week proof of concept with recall at k.")
 add("Prototype vs production AI?",
-    "Science fair vs a trolley people lean on.",
-    "Eval, authz, observability, versioning, rollback, support, cost. Production is a system.",
-    "A Colab RAG is not Lisa.")
+    "A science fair notebook is not a trolley people lean on. Production has evaluation, authorization, observability, versioning, rollback, support, and cost.",
+    "A Colab RAG is not Lisa. Production is a system with SLOs. ezyCart vision in ONNX and TF Lite, WebSockets in FastAPI and Spring Boot, and recipes RAG with citations is the production shape. Prototypes skip HITL and then people are surprised. I insist on the delta list when someone wants to ship a spike. Principal AI is that insistence. Support runbooks are part of done.",
+    "A Colab RAG is not Lisa, because production adds evaluation, authorization, observability, versioning, rollback, support, and cost to the notebook demo.")
 add("How do you describe impact honestly?",
-    "Baseline, action, measurement, period, team vs me.",
-    "Every resume number: method. $2M beacons, sub-100ms, sub-5% DD, 70% ANR, 30% perf, 500K/40%.",
-    "No $X million placeholders.")
+    "I describe impact with a baseline, the action, the measurement, the period, and what was me versus the team. Every number on the resume should have a method, and invented millions should never appear.",
+    "The numbers I will defend are indoor navigation versus beacons at about two million, sub-100ms on-device inference, TAN Intelligence sub-five-percent drawdown as an independent venture, about seventy percent ANR reduction, about thirty percent performance improvement, about five hundred thousand users, and about forty percent faster backends. I will walk the method rather than chant the figure. I will not invent a new dollar amount under pressure. Impact without a baseline is marketing. Principal AI interviews should feel like a design review of the metric. Team versus me is stated.",
+    "I will walk the method behind indoor navigation versus beacons, sub-100ms vision, sub-five-percent drawdown on TAN as an independent venture, and the Colan-scale ANR, performance, user, and backend figures, and I will not invent a new dollar amount.")
 add("ezyCart in 60 seconds?",
-    "Smart trolley: cameras, sensors, tablet, backend, AI checkout.",
-    "Edge vision (YOLO/RT-DETR), Kimera-VIO nav, WS IoT, Android, FastAPI/Spring, RAG recipes/Lisa, sub-100ms, fail-safe.",
-    "Camera/sensors → edge AI → app/backend → pay.")
+    "ezyCart is a smart trolley with cameras, sensors, a tablet, a backend, and AI checkout. The shopper builds a basket while the edge stack watches the cart, not a cashier lane first.",
+    "Edge vision with YOLO or RT-DETR on ONNX or TF Lite runs under a sub-100ms budget. Kimera-VIO supports indoor navigation versus a beacon-heavy alternative. WebSockets move events through FastAPI and Spring Boot. Android is the last mile on the trolley. Lisa and recipes RAG with LangChain and LlamaIndex help with cooking and missing SKUs. Fail-safe scanning still works if the assistant is down. That is the sixty-second tour I give as Principal AI at Retailetics. I stop before a tool dump.",
+    "Cameras and sensors go to edge AI, then the app and backend, then pay, with Lisa as the assistant overlay rather than as the only way to add an item.")
 add("Indoor navigation $2M story — what they will probe?",
-    "Software localization vs thousands of beacons.",
-    "Baseline cost, accuracy metric, failure (textureless), your role vs team, how savings were calculated.",
-    "Don't just say '$2M'; walk the arithmetic you actually used.")
+    "They will probe software localization versus thousands of beacons, the baseline cost, the accuracy metric, textureless failure, your role versus the team, and how the savings were calculated. Saying two million without the arithmetic is how you lose the follow-up.",
+    "Kimera-VIO indoor navigation is the software path we used instead of a dense beacon install. I walk baseline cost, accuracy, failure modes such as textureless corridors, and my role versus the team's. The about two million figure is the allowed savings story versus beacons, and I will not invent adjacent dollar amounts. I will not defend a number I cannot method. This is a systems story as much as a CV story. Principal AI interviews treat it as a measurement review. Honesty about failure cases builds more trust than a round figure.",
+    "I do not just say two million. I walk the beacon baseline, Kimera-VIO accuracy, textureless failure, and the arithmetic we actually used, without inventing extra dollar amounts.")
 add("TAN Intelligence — how to talk about it?",
-    "Independent venture, not a second employer. Custom indicators, 6 years, Telegram 5m/15m, SMC rules, Pine/Python, sub-5% DD.",
-    "Leakage, costs, walk-forward. Not investment advice. Risk limits.",
-    "Keep it off the Experience list; keep it on the R&D story.")
+    "TAN Intelligence is an independent venture, not a second employer. Talk about custom indicators, six years, Telegram alerts on five-minute and fifteen-minute charts, Pine and Python, and sub-five-percent drawdown with risk limits.",
+    "I keep TAN off the Experience list and on the R and D story. I talk leakage, costs, walk-forward validation, and the fact that this is not investment advice. Risk limits matter more than a lucky chart. Pine and Python are the implementation. Telegram delivers the five-minute and fifteen-minute alerts. I will not invent assets under management or dollar returns. Interviewers should hear independence clearly so they do not think I stacked jobs. Six years is duration of the venture, not tenure at a company named TAN.",
+    "I keep TAN Intelligence off the Experience list and on the independent R and D story, with walk-forward hygiene and risk limits rather than a claim that it was an employer.")
 add("90-day plan if hired?",
-    "Week 1–2: SLOs, evals, traces, cost. Then the riskiest quality or latency gap. Then a small agent/RAG improvement behind a flag.",
-    "Don't boil the ocean. Ship a measured win.",
-    "Stand up golden set + Langfuse before a new agent framework.")
+    "The first two weeks are SLOs, evals, traces, and cost. Then you attack the riskiest quality or latency gap. Then you ship a small agent or RAG improvement behind a flag. You do not boil the ocean.",
+    "I would stand up a golden set and Langfuse or LangSmith before I introduce a new agent framework. A measured win beats a platform rewrite. ezyCart and Lisa give me a concrete place to look: groundedness, TTFT, tool errors, and on-device vision SLOs. I would meet PMs and legal on allergen and PII red lines early. Ninety days is three chapters, not thirty initiatives. Principal AI plans are sequenced. Shipping a flag-guarded improvement is the proof.",
+    "Stand up a golden set and tracing before a new agent framework, then ship one flagged RAG or latency win rather than boiling the ocean in ninety days.")
 add("How do you work with PMs and legal on AI?",
-    "Translate risk: allergens, PII, hallucination, cost. Offer options with numbers.",
-    "Red lines in writing. Eval as a shared language.",
-    "Legal: abstain on medical/allergen without source.")
+    "Translate risk into options with numbers: allergens, PII, hallucination, and cost. Write the red lines down and use evaluation as a shared language.",
+    "Legal gets abstain on medical and allergen questions without a source. PMs get a menu of quality versus latency versus cost, not a mystery model. Red lines in writing beat a Slack vibe. Lisa is a good shared object because a wrong ingredient is understandable. I do not hide uncertainty. Principal AI work is this translation. Eval numbers are how we disagree productively.",
+    "Legal gets abstain on medical and allergen questions without a source, and PMs get quality versus latency versus cost as numbers instead of a mystery model.")
 add("On-call for LLM systems?",
-    "Pages on error, tail latency, cost spike, loop, safety filter down.",
-    "Runbooks: rollback prompt, disable tool, shed to FAQ cache.",
-    "Cost anomaly at 2am: kill runaway agent graph.")
+    "Pages go out on errors, tail latency, cost spikes, loops, and a safety filter that is down. The runbook says rollback prompt, disable tool, or shed to FAQ cache.",
+    "A cost anomaly at two in the morning kills a runaway agent graph first, then we diagnose. Prompt id, index alias, GPU queue, and tool error rate are the first four charts. Lisa can be disabled while barcode scan still works. This is ordinary on-call with new dashboards. FastAPI and Spring Boot health checks still matter. I want kill switches tested in daylight. On-call without a runbook is hero culture.",
+    "A cost anomaly at two in the morning kills a runaway agent graph first, then we diagnose, while barcode scan still works if Lisa is shed to off.")
 add("Capacity planning for tokens?",
-    "Guess QPS × tokens × $/token × cache hit. Stress.",
-    "Peak vs average. Seasonal retail. Headroom.",
-    "Weekend recipe traffic vs weekday SKU lookups.")
+    "You estimate queries per second times tokens times dollars per token times cache hit rate, then you stress the peak. Retail is seasonal, so weekend recipes are not weekday SKU lookups.",
+    "Peak versus average, headroom, and a cache-hit assumption that you actually measure are the plan. I do not invent a spend target. Weekend recipe traffic on Lisa differs from weekday SKU lookups that should not use an LLM. GPU hours follow that mix. Colan-scale planning for about five hundred thousand users is the same habit with a new unit called tokens. Capacity is a spreadsheet plus a load test. Surprise bills are a planning miss.",
+    "Weekend recipe traffic on Lisa is not weekday SKU lookup traffic, so token capacity follows that mix instead of a single average queries-per-second guess.")
 add("How do you keep mobile supporting skills without leading with them?",
-    "They are how AI reaches the floor, not the headline.",
-    "Kotlin/Compose/Flutter/Android/iOS as the last mile of vision+agents. Don't apply as a pure Android IC if the role is Principal AI — unless they want both.",
-    "WS into ezyCart Android is the punchline, not RecyclerView trivia — but you can still answer ANR.")
+    "Mobile is how AI reaches the floor, not the headline of a Principal AI interview. You can still answer ANR, but you lead with vision, agents, and retrieval.",
+    "Kotlin, Compose, Flutter, Android, and iOS are the last mile of vision and agents on ezyCart. I do not apply as a pure Android individual contributor if the role is Principal AI unless they want both. WebSockets into the ezyCart Android client is the punchline, not RecyclerView trivia. I can still talk ANR because about seventy percent ANR reduction and about thirty percent performance improvement on a fleet of about five hundred thousand users is real supporting evidence. The headline stays GenAI and systems. Supporting skills are offered, not leading.",
+    "WebSockets into the ezyCart Android client is the punchline, and I can still answer ANR from a fleet of about five hundred thousand users, but I lead with vision, RAG, and agents.")
 add("Thread safety on Android vs in the agent backend?",
-    "UI thread vs IO. Backend: don't share mutable agent state across requests.",
-    "Immutable messages, per-thread state, locks only when needed.",
-    "One LangGraph thread_id per cart session, not a global dict.")
+    "On Android you keep heavy work off the UI thread. On the backend you do not share mutable agent state across requests. Both are isolation stories.",
+    "Immutable messages, per-thread or per-session state, and locks only when needed are the rules. One LangGraph thread identifier per cart session, not a global dict. FastAPI concurrency plus a shared mutable basket is a race. Compose and coroutines on device are the UI analogue. I can answer both without turning the interview into a mobile screen. Isolation is the common language. Principal AI backends fail in races just like apps fail with ANRs.",
+    "One LangGraph thread identifier per cart session, not a global dictionary, which is the backend analogue of keeping inference off the Android UI thread.")
 add("How would you introduce evals to a team that only ships APKs?",
-    "Start with 30 labelled questions and a CI number. Don't start with a platform.",
-    "Show a caught regression. Then invest in LangSmith.",
-    "The 'creative' prompt that invented ingredients is the story.")
+    "Start with a few dozen labelled questions and a CI number rather than a tracing platform. Show a caught regression, such as a creative prompt that invented ingredients, then invest in LangSmith or Langfuse once the team believes the number.",
+    "Thirty labelled Lisa questions in CI will teach more than a LangSmith rollout with no cases. The story of a creative prompt that invented ingredients is the conversion moment. Then we add traces. Mobile teams already understand crash-free sessions; evals are the assistant analogue. I would pair, not lecture. Small and numerical beats a strategy deck. This is change management for Principal AI.",
+    "The creative prompt that invented ingredients is the story that converts an APK-only team, after thirty labelled questions in CI have given them a number to defend.")
 add("SQL vs vector vs BM25 — who owns the truth?",
-    "Transactional truth in SQL. Language search in BM25/vectors. Don't duplicate poorly.",
-    "Price/stock from SQL/API at answer time even if RAG mentioned an old price.",
-    "Lisa quotes promo from SQL live, not from a week-old chunk alone.")
+    "Transactional truth lives in SQL, while language search lives in BM25 and vectors. Do not let a week-old chunk impersonate a price or a stock count. Lisa should join those sources at answer time instead of treating retrieval as the system of record.",
+    "Price and stock come from SQL or an API at answer time even if RAG mentioned an old price, so Lisa quotes a live promo from SQL rather than from a chunk alone. BM25 owns identifiers, vectors own paraphrase, and recipes RAG owns prose. Mixing that ownership is how you bill the wrong amount. FastAPI can join the three sources in one handler because truth has a system of record.",
+    "Lisa quotes a live promo from SQL, not from a week-old chunk alone, while BM25 owns identifiers and vectors own paraphrase over recipe prose.")
 add("Event sourcing for carts?",
-    "Store what happened (scanned, removed), rebuild state.",
-    "Great for replay/debug; harder reads. Mix with snapshots.",
-    "Replay a cart to debug a double charge.")
+    "Store what happened, such as scanned and removed, then rebuild state. Event sourcing is great for replay and harder for reads, so you mix snapshots.",
+    "Replay a cart to debug a double charge, because sequence identifiers already give ezyCart a partial event log over WebSockets and snapshots keep current basket reads cheap. I would event-source the cart, not the LLM tokens, because the debug story is the value. Spring Boot consumers can rebuild state from those events when replay matters more than simple CRUD. Choose the pattern when you need forensic reconstruction of scans and removals, not because event sourcing is fashionable.",
+    "We replay a cart from scanned and removed events to debug a double charge, with snapshots so the current basket read stays cheap.")
 add("Backpressure on camera frames?",
-    "If infer is slow, drop frames, don't queue 10 seconds of past.",
-    "Always latest-frame policy for checkout. Count via tracking, not every frame.",
-    "Keep last frame only; track IDs across kept frames.")
+    "If inference is slow, drop frames instead of queuing ten seconds of the past. Checkout wants the latest world, and counts come from tracking, not from every frame.",
+    "Latest-frame policy keeps only the newest image. Track identifiers persist across kept frames so a drop does not double count. YOLO and RT-DETR on ONNX and TF Lite stay inside sub-100ms by refusing a backlog. This is the vision twin of GPU request shedding. ezyCart cannot bill from a delayed past. Metrics include drop rate and freshness. Backpressure here is correctness, not only capacity.",
+    "We keep only the last frame and persist track identifiers across kept frames, so a slow YOLO call drops stale images instead of billing from a delayed past.")
 add("How do you version ONNX models on device?",
-    "A file with a version, a flag, a rollback.",
-    "Signed artifacts, compatible input shapes, A/B cohort, disk space.",
-    "yolo-store-v17.onnx with min app version.")
+    "Ship a signed ONNX file with a version, a compatibility flag, and a rollback path. Disk space and input shapes are part of the version, not footnotes. Silently overwriting a detector on every trolley is how a bad build becomes a fleet incident.",
+    "Artifacts are signed, input shapes stay compatible, device cohorts A/B the file, and we can disable it instantly, which is the same idea as a server index alias. yolo-store-v17.onnx carries a minimum app version, and the sub-100ms budget still applies after the swap. I do not silently overwrite a model on all trolleys; rollback is a previous file plus a flag. Device MLOps is still MLOps.",
+    "yolo-store-v17.onnx ships with a minimum app version, a signature, and a rollback flag, so a bad RT-DETR or YOLO build is not a fleet-wide brick.")
 add("Coordinator vs IC at Principal level?",
-    "You still touch the critical path, but you also set the quality bar and unblock.",
-    "Design reviews, eval gates, mentoring, saying no to unmeasured agents.",
-    "You might write the LangGraph skeleton and the eval harness, not every tool.")
+    "You still touch the critical path, but you also set the quality bar and unblock others. You might write the skeleton and the eval harness, not every tool.",
+    "Design reviews, eval gates, mentoring, and saying no to unmeasured agents are the coordinator half. Writing the LangGraph skeleton and the harness is the IC half. I still debug a production trace. Retailetics Principal AI and Lead GenAI work is this mix on ezyCart and Lisa. I do not disappear into slideware. I do not hoard all tool implementations either. The team should be able to ship behind the bar I set.",
+    "I might write the LangGraph skeleton and the eval harness rather than every tool, and I still sit in the production trace, which is the Principal mix of coordinator and individual contributor.")
 add("What is a kill switch?",
-    "A big red button that disables the clever path.",
-    "Per-feature flags, default to deterministic checkout if AI is sick.",
-    "Disable Lisa globally; scanning still works.")
+    "A kill switch is a big red button that disables the clever path. Default to deterministic checkout when AI is sick, and test the button in daylight. A switch that nobody dares to press is decoration, not a control.",
+    "Per-feature flags disable Lisa globally while scanning still works, server flags disable a tool, a prompt, or a model route, and device flags disable a new ONNX file. Kill switches are on-call's first move, they are tested in daylight, and a switch that nobody dares to press is decoration. ezyCart is still a trolley after the switch. Principal AI platforms ship with those red buttons.",
+    "We can disable Lisa globally while barcode scanning still works, which is the kill switch that keeps checkout alive when the agent path is sick.")
 add("Observability for hallucinations in prod?",
-    "You won't label all chats. Sample, user flags, critic on a slice, retrieval-empty rate.",
-    "Don't wait for a viral wrong-allergen story.",
-    "Thumbs-down + 'unsupported claim' critic on 5% traffic.")
+    "You will not label every chat. You sample, you collect user flags, you run a critic on a slice, and you watch retrieval-empty rates. Do not wait for a viral wrong-allergen story.",
+    "Thumbs-down plus an unsupported-claim critic on a slice of traffic is the practical design, with retrieval-empty and abstain rates as leading indicators and heavier sampling on allergen paths. Traces must keep the evidence window, and Lisa is the system I would instrument first. Observability without sampling is a hope. I would rather catch a thin slice daily than read a viral transcript.",
+    "Thumbs-down plus an unsupported-claim critic on a slice of traffic, with heavier sampling on allergen paths, is how we watch Lisa without labelling every chat.")
 add("How do you handle multilingual RAG (Tamil/EN/MS)?",
-    "Embed in a multilingual model or translate-then-search. Eval per language.",
-    "Tokenizer cost differs. Don't assume English chunking.",
-    "Tamil recipe query against EN catalogue — translation + hybrid.")
+    "Use a multilingual embedding model or translate then search, and evaluate per language. Do not assume English chunking and English token costs.",
+    "Tokenizer cost differs across Tamil, English, and Malay. A Tamil recipe query against an English catalogue may need translation plus hybrid retrieval. I would build per-language slices in the golden set. Lisa in Malaysian and Indian stores cannot be English-only eval. Chunkers that split on English punctuation fail on other scripts. Multilingual is an eval problem first. I do not claim a language I did not test.",
+    "A Tamil recipe query against an English catalogue uses translation plus hybrid search, and the golden set must score Tamil, English, and Malay separately.")
 add("Streaming tool calls (parallel tools)?",
-    "Ask stock and promo at once if independent.",
-    "Fan-out with timeouts. Merge. Don't parallel a tool that depends on the other.",
-    "get_stock and get_allergens together; add_to_cart after both.")
+    "Ask for stock and allergens at once if they are independent. Do not parallel a tool that depends on the other, and always merge with timeouts.",
+    "Independent reads fan out with deadlines and then merge, so get_stock and get_allergens can run together while add_to_cart waits for both. LangGraph parallel nodes need the same cancellation as SSE disconnects, and FastAPI already fans out HTTP the same way. Dependency order is part of the schema, because parallelism is a latency win only when the merge is correct. Traces must show both legs.",
+    "get_stock and get_allergens can run together, and add_to_cart waits for both, because independent reads fan out while mutations stay ordered.")
 add("What is structured output / outlines / grammar decoding?",
-    "Force the model to speak JSON by construction, not by begging.",
-    "Constrained decoding vs post-validate. Still validate.",
-    "Outlines/json_schema for tool args.")
+    "Force the model to speak JSON by construction rather than by begging. Then still validate, because constrained decoding is not a security boundary.",
+    "Constrained decoding with a JSON schema or a grammar reduces repairs, and Pydantic still validates while money tools stay extra-forbid. Outlines or native json_schema for tool arguments is the implementation I would name, and Lisa's add_to_cart needs that pair. Constrained decoding plus validation is defense in depth, so I do not skip validation because the grammar looked strict. Structured output is how agents stop emitting prose into APIs.",
+    "Outlines or native JSON schema can constrain tool arguments, and Pydantic still validates, so Lisa cannot smuggle prose into add_to_cart.")
 add("Chain-of-thought in production?",
-    "Hidden thinking can help some models; it can also leak and cost tokens.",
-    "Don't stream raw CoT to shoppers. Don't treat CoT as evidence of truth.",
-    "Use it internally; show shoppers the grounded short answer.")
+    "Hidden thinking can help some models, and it can also leak and cost tokens. Do not stream raw chain-of-thought to shoppers, and do not treat it as evidence of truth.",
+    "Use internal reasoning if the model family benefits, show shoppers a grounded short answer, and never treat a private scratchpad as a citation. Cost and PII leakage are reasons to keep it off the tablet. Lisa cites chunks, not inner monologue. I would not enable a long visible chain on a shop floor. Production is not a reasoning contest. Groundedness eval still wins.",
+    "Use chain-of-thought internally if it helps, show shoppers the grounded short answer, and never treat the hidden scratchpad as evidence in Lisa's citations.")
 add("How do you prevent cost bombs (infinite generate)?",
-    "max_tokens, stop sequences, step budgets, per-tenant quotas, anomaly alerts.",
-    "Hard limits in the gateway, not only in the prompt.",
-    "Gateway kills runs > $0.50 or > 30s.")
+    "Set maximum tokens, stop sequences, step budgets, per-tenant quotas, and anomaly alerts. Hard limits live in the gateway, not only in a polite prompt.",
+    "The gateway kills runaway generations on wall time and on a small per-request cap, and I will not invent a platform savings figure to dress that up. Agent graphs have step budgets, Lisa cannot generate forever after a tablet disconnects, and alerts page on-call. Prompt-only limits will be ignored by a loop, so hard limits in the gateway are what production actually means. This is the same shedding as GPU backpressure.",
+    "The gateway kills runaway generations on wall time and on a small per-request cap, because a prompt that says be brief will not stop an infinite Lisa loop.")
 add("A/B testing LLM apps vs classic A/B?",
-    "Outputs are random; you need more samples and quality metrics, not only conversion.",
-    "Holdout, CUPED if you have it, guardrail metrics (safety).",
-    "Don't ship a wittier Lisa that hallucinates more even if clicks rise.")
+    "Outputs are random, so you need more samples and quality metrics, not only conversion. A wittier Lisa that hallucinates more is a failed experiment even if clicks rise.",
+    "Holdouts, more samples, and guardrail metrics such as safety and groundedness sit beside conversion, and CUPED can help if we have covariates. I would not ship a funnier assistant that invents ingredients, because classic button A/B under-samples LLM variance. Eval plus A/B is the pair, and Principal AI experiments protect those guardrails. Statistical humility is part of the answer.",
+    "Do not ship a wittier Lisa that hallucinates more even if clicks rise, because LLM experiments need quality and safety guardrails beside conversion.")
 add("Knowledge graphs vs vector RAG?",
-    "Graphs are explicit relations; vectors are fuzzy similarity. Hybrid exists.",
-    "Use graphs when relations are the product (allergens, substitutes). Vectors for prose.",
-    "SKU substitute graph + vector recipes.")
+    "Graphs store explicit relations, and vectors store fuzzy similarity. Hybrid exists, and you use graphs when the relation is the product, such as allergens or substitutes. Ten million PDFs do not automatically want a knowledge graph.",
+    "Allergens and substitutes are relations I would rather store explicitly. Recipe prose can stay in vectors. A SKU substitute graph plus vector recipes is a hybrid I like. Graphs are not a magic upgrade for ten million PDFs. Lisa should consult a substitute graph when milk is out of stock. I pick the representation from the question type. Principal AI is matching structure to the domain.",
+    "A SKU substitute graph handles out-of-stock milk, while recipe prose stays in vectors, which is the hybrid rather than pretending every relation is a cosine neighbor.")
 add("How do you do RAG over tables?",
-    "Don't embed a CSV as a blob blindly. Preserve rows, maybe text-to-SQL with tight allowlists.",
-    "Row-level chunks, schema linking, or constrained SQL. Test numeric exactness.",
-    "Nutrition table: retrieve the row, don't round-trip an LLM for 2+2.")
+    "Do not embed a CSV as a blob and hope the model still remembers the number. Preserve rows, or use tightly allowlisted text-to-SQL, and test numeric exactness. Arithmetic that RAG round-trips through an LLM is how two plus two becomes a hallucination.",
+    "Row-level chunks, schema linking, or constrained SQL are the options. Nutrition arithmetic should retrieve the row, not round-trip an LLM for two plus two. I test exact numbers. Lisa quoting a calorie field from a smashed blob is a failure. Tables are why RAG is sometimes the wrong tool. Allowlists prevent a model from dropping a table. Numeric eval is mandatory.",
+    "A nutrition table should retrieve the row and use the number, not round-trip an LLM for arithmetic, because embedding a CSV as a blob is how exact values disappear.")
 add("Code interpreter / sandboxed tools?",
-    "Let the model run code in a jail, not on the checkout host.",
-    "No network, timeouts, resource limits. Still injection risk.",
-    "Don't give a sandboxed python that can hit the payment API.")
+    "Let the model run code in a jail, not on the checkout host. There is no network, there are timeouts and resource limits, and you still assume injection risk inside the sandbox. A Python jail that can hit the payment API is not a sandbox.",
+    "A sandboxed Python that can hit the payment API is not a sandbox. Lisa does not get a shell on the FastAPI host. Timeouts and memory caps are mandatory. Retrieved documents can still inject into the code string, so allowlists remain. I am conservative on the trolley. Sandboxes are extra privilege, not a toy. Principal AI says no by default.",
+    "Do not give sandboxed Python a path to the payment API. Lisa's code tools stay without network and with timeouts, because injection still exists inside the jail.")
 add("How do you explain attention to a hiring manager who is not ML?",
-    "It's a highlighter for the useful words in the sentence.",
-    "Then offer the Q/K/V sentence if they want depth.",
-    "Connecting 'it' to 'trolley' in the shopper question.")
+    "Attention is a highlighter for the useful words in the sentence. If they want depth, you can add the query, key, and value sentence after the highlighter lands.",
+    "I start with the highlighter metaphor, then I show how it connects it to trolley in a shopper question. If they lean in, I say queries ask, keys index, and values are what we blend. I do not start with matrices unless they ask. Lisa packing five chunks is a practical follow-on: we highlight evidence rather than the whole catalogue. Communication is part of Principal AI. The manager should leave able to repeat the highlighter line.",
+    "Attention connects the word it to trolley in a shopper question, which is the highlighter I use before I ever mention query, key, and value matrices.")
 add("Staff/principal system design checklist you actually follow?",
-    "Clarify, SLOs, scale, draw, data, failure, security, observe, trade-off, validate.",
-    "Say it as a habit, then apply to their prompt.",
-    "Always name p95, ACL, eval, one failure mode.")
+    "Clarify, write SLOs, talk scale, draw, name data, name failure, name security, name observability, name the trade-off, then validate. It is a habit, not a poster.",
+    "I say the checklist out loud and then apply it to their prompt. I always name p95, ACL, eval, and one failure mode. ezyCart and Lisa are where that habit shows. I would rather miss a trendy box than miss rollback. The checklist keeps whiteboards honest. Principal AI interviews are this ritual. Validation is a golden set or a load test, not a nod.",
+    "I always name p95, ACL, evaluation, and one failure mode on the board, then I apply the rest of the checklist to their actual prompt instead of reciting it as a poster.")
 add("How do you keep from gold-plating agents?",
-    "Start as a function, then a chain, then an agent if eval says so.",
-    "Complexity budget. Revisit quarterly.",
-    "SKU lookup stayed a function. Recipes earned a graph.")
+    "Start as a function, then a chain, then an agent if evaluation says so. Complexity is a budget you revisit, not a one-way upgrade. SKU lookup staying a function while recipes earned a graph is the discipline I want on a Principal AI team.",
+    "SKU lookup stayed a function, while recipes earned a graph because missing SKUs and multi-step cooking needed tools. Quarterly revisits kill unused nodes, and Lisa does not need a swarm to format JSON. I ask what metric the extra node moves, because gold-plating is a Principal AI failure mode. Simplicity that meets SLOs is the win.",
+    "SKU lookup stayed a function, and recipes earned a LangGraph because missing SKUs and multi-step cooking needed tools, not because agents were fashionable.")
 add("Mobile + AI interview: what they might still ask?",
-    "ANR, coroutines, Compose, Flutter BLoC, offline, WS reconnect — supporting, not the headline.",
-    "Tie every answer back to how the model reaches the shopper.",
-    "Main-thread policy + device WS + on-device TF Lite.")
+    "They may still ask ANR, coroutines, Compose, Flutter BLoC, offline, and WebSocket reconnect. Those are supporting skills, and you tie every answer back to how the model reaches the shopper.",
+    "Main-thread policy, device WebSockets, and on-device TF Lite are the bridge. About seventy percent ANR reduction, about thirty percent performance improvement, and about five hundred thousand users are the supporting scale story, plus about forty percent faster backends. I still lead with ezyCart vision, Lisa, and RAG. I will not let the interview become a pure Android screen unless they hire for that. Supporting answers stay short and tied to the trolley. Principal AI is the headline. Mobile is how it ships to a hand.",
+    "Main-thread policy, device WebSockets, and on-device TF Lite are the bridge answers, always tied back to how YOLO and Lisa reach the shopper rather than to RecyclerView trivia.")
 add("How would you onboard a new embedding model with 10M docs?",
-    "Shadow index, dual retrieve, compare recall, alias swap, keep rollback.",
-    "Cost of re-embed, backfill SLA, query routing during migrate.",
-    "Build catalogue-v2 overnight, shadow 2 days, swap alias.")
+    "Build a shadow index, dual retrieve, compare recall, swap the alias, and keep rollback. Re-embed cost and backfill SLA are first-class, not a footnote.",
+    "Query routing during migrate can send a slice to the new space. catalogue-v2 builds overnight, shadows for a couple of days, then the alias swaps if recall holds. Recipes RAG does the same with a smaller corpus first if I want a cheaper rehearsal. I do not mix embedding spaces. Ten million documents makes job design part of the architecture. Dual-write if updates arrive during backfill. Rollback is yesterday's alias.",
+    "Build catalogue-v2 overnight, shadow it for a couple of days, compare recall, and swap the alias, which is the same onboard path I would rehearse first on the smaller recipes RAG corpus.")
 add("What is a 'cell' or 'bulkhead' in an AI platform?",
-    "Blast-radius boxes so one noisy tenant doesn't drown GPUs.",
-    "Per-tenant queues, separate pools for batch embed vs interactive chat.",
-    "Embed jobs cannot starve Lisa TTFT.")
+    "Cells are blast-radius boxes so one noisy tenant cannot drown the GPUs. Bulkheads separate batch embed from interactive chat so a backfill cannot starve time to first token.",
+    "Per-tenant queues and separate pools for batch embed versus Lisa TTFT are the practical bulkheads, and Colan-scale multi-tenant backends taught isolation that GPUs make more expensive to ignore. Embed jobs cannot starve interactive chat, and cells also help residency. I draw this next to the router because platform Principal AI work is blast radius. Shared everything is a single incident.",
+    "Embed jobs cannot starve Lisa's time to first token, because batch and interactive pools are bulkheaded and noisy tenants have their own queues.")
 add("How do you handle model deprecation from a vendor?",
-    "Abstraction, dual-run, eval parity, date in the calendar.",
-    "Never hardcode gpt-x in 40 repos. One router.",
-    "GPT-4o → successor behind the same interface after eval.")
+    "Abstract the model, dual-run, demand evaluation parity, and put the sunset date on the calendar. Never hardcode a model name in forty repositories. The router owns the identifier so Lisa does not care what the vendor named the checkpoint.",
+    "One router owns the identifier. A successor to a frontier model goes behind the same interface after the golden set says parity. Lisa should not care what the vendor named the checkpoint. I start dual-run before the sunset date. Deprecation is an incident if you discover it from an error. Principal AI vendors are rented; the interface is owned. Calendar plus eval is the plan.",
+    "A successor model goes behind the same router interface after eval parity, so Lisa does not care what the vendor named the checkpoint and forty repos do not hardcode it.")
 add("Security review questions you pre-empt?",
-    "Where PII goes, tool authz, injection, logs, residency, supply chain of models.",
-    "Bring a diagram. Don't wait to be asked.",
-    "Slide: data flow from cart camera to event (no raw video stored) vs chat to LLM (redacted).")
+    "Where PII goes, how tools are authorized, injection, logs, residency, and the supply chain of models. Bring a diagram and do not wait to be asked.",
+    "I show cart camera to event without storing raw video, versus chat to LLM with redaction. Tool allowlists, HITL on pay, and trace redaction sit on the same slide. ezyCart vision plus Lisa is a clearer diagram than a generic chatbot. I mention ONNX supply chain signing. FastAPI and Spring Boot authz is in the picture. Pre-empting review is Principal AI manners. Security is a data-flow talk.",
+    "The slide shows cart camera to event without storing raw video, versus chat to the LLM with redaction, so a security review does not have to drag the data flow out of me.")
 add("How do you document an agent for the next engineer?",
-    "Graph picture, tool contracts, budgets, eval, runbook, known failure modes.",
-    "README + ADR + golden traces.",
-    "Lisa README shows the graph and the pay-tool never-list.")
+    "Give the next engineer a graph picture, tool contracts, budgets, an eval, a runbook, and the known failure modes. README, ADR, and golden traces beat a tribal walkthrough. If they cannot disable a pay tool on night one, the agent was never documented.",
+    "Lisa's README shows the graph and the pay-tool never-list, golden traces are executable docs, and on-call runbooks live beside them. I document kill switches so the next engineer can disable a tool on night one. Documentation is part of shipping as Lead GenAI. If it is only in my head, it is not production.",
+    "Lisa's README shows the graph and the pay-tool never-list, and golden traces plus a runbook are how the next engineer can disable a tool on night one.")
 add("Final: what is production GenAI in one sentence?",
-    "A measured, permissioned, observable, reversible system that uses models where they earn their keep.",
-    "Not a prompt in a slide. Quality + safety + SLO + cost + rollback.",
-    "ezyCart + Lisa + edge vision + FastAPI/Spring + evals — that's the bar.")
+    "Production GenAI is a measured, permissioned, observable, reversible system that uses models where they earn their keep. It is not a prompt in a slide.",
+    "Quality, safety, SLOs, cost, and rollback are the bar. ezyCart, Lisa, recipes RAG, edge vision with YOLO and RT-DETR, FastAPI and Spring Boot, and evals are how I have practiced that bar as Principal AI and Lead GenAI at Retailetics. TAN Intelligence stays an independent venture on the side, not an employer, and it does not replace production discipline. I would rather ship a smaller graph that we can reverse than a swarm we cannot see. That sentence is the close of a senior interview. If we cannot measure it, it is still a prototype.",
+    "ezyCart, Lisa, edge vision, FastAPI and Spring Boot, and evals are the bar: a measured, permissioned, observable, reversible system, not a prompt in a slide.")
 
 QUESTIONS = Q

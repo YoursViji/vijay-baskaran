@@ -11,6 +11,7 @@ from common import header_footer, qa, styles
 from level1_basic import QUESTIONS as L1
 from level2_intermediate import QUESTIONS as L2
 from level3_advanced import QUESTIONS as L3
+from level_errors import QUESTIONS as LERR
 
 OUT = Path("/tmp/Vijay_Baskar_AI_Interview_Guide.pdf")
 
@@ -32,6 +33,7 @@ SECTIONS = {
     "What is Generative AI? What is an LLM?": "LLM, RAG, and agents (intermediate)",
     "What is a backtest vs paper vs live?": "Trading hygiene",
     "AWS Bedrock in one minute?": "Cloud (Bedrock, Vertex, SageMaker)",
+    "What does HTTP 400 mean on an LLM or RAG API, and what do you do?": "HTTP, vendor, RAG, and GPU errors",
     "Design a RAG pipeline that handles 10 million documents.": "25 most-asked industry questions",
     "How do you handle document updates and deletions in RAG?": "RAG at scale",
     "When is a multi-agent system worse than one agent?": "Agents, tools, and memory",
@@ -53,8 +55,8 @@ def add_questions(story, items, n, s):
 
 def main():
     s = styles()
-    n1, n2, n3 = len(L1), len(L2), len(L3)
-    total = n1 + n2 + n3
+    n1, n2, n3, nerr = len(L1), len(L2), len(L3), len(LERR)
+    total = n1 + n2 + n3 + nerr
 
     doc = SimpleDocTemplate(
         str(OUT),
@@ -74,7 +76,8 @@ def main():
         Paragraph(
             "Full question bank structured Basic → Intermediate → Advanced. "
             "Red = question. Blue = simple answer + interview answer. Green = example from real work. "
-            f"{total} questions ({n1} basic, {n2} intermediate, {n3} advanced).",
+            f"{total} questions ({n1} basic, {n2} intermediate, {nerr} error-codes, {n3} advanced). "
+            "Every answer is complete sentences: a simple explanation, an interview answer, and a real-work example.",
             s["sub"],
         )
     )
@@ -89,7 +92,7 @@ def main():
             s["body"],
         )
     )
-    story.append(Paragraph("Three levels", s["h"]))
+    story.append(Paragraph("How this book is structured", s["h"]))
     story.append(
         Paragraph(
             f"<b>Level 1 — Basic ({n1} questions).</b> Fresher fundamentals first: Python, OOP, data structures and Big-O, "
@@ -103,6 +106,15 @@ def main():
             f"<b>Level 2 — Intermediate ({n2} questions).</b> Core ML, computer vision and spatial AI, FastAPI/Spring Boot "
             "backends, mobile production (ANR, coroutines, Flutter), LLM/RAG/agents intro, trading hygiene, and cloud. "
             "This is the mid-level IC loop: ship a model, an API, and a client without pretending to be a research lab.",
+            s["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            f"<b>Error codes ({nerr} questions).</b> HTTP 400/401/403/404/409/422/429/500/502/503/504, OpenAI and Anthropic "
+            "codes such as insufficient_quota, context_length_exceeded, rate_limit, content_filter, model_not_found, and "
+            "timeout, plus 422 validation, vector-DB failures, GPU OOM, and tokenizer mismatch. Full-sentence meaning and "
+            "what you would actually do.",
             s["body"],
         )
     )
@@ -144,6 +156,17 @@ def main():
         )
     )
     n = add_questions(story, L2, n, s)
+
+    story.append(PageBreak())
+    story.append(Paragraph("Error codes — HTTP, LLM, RAG, and serving", s["h"]))
+    story.append(
+        Paragraph(
+            "Meanings in full sentences, then the interview action: retry, fail closed, fallback, or page. "
+            "Checkout scanning does not share fate with chat GPUs.",
+            s["note"],
+        )
+    )
+    n = add_questions(story, LERR, n, s)
 
     story.append(PageBreak())
     story.append(Paragraph("Level 3 — Advanced (GenAI, agents, RAG, MLOps, production)", s["h"]))
