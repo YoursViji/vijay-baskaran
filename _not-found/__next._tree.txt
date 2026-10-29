@@ -1,2 +1,2 @@
-:HL["/vijay-baskaran/_next/static/chunks/057n8ft4kmwqp.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"Qf5WaNJNTP-5SGZOidYoz"}
+:HL["/vijay-baskaran/_next/static/chunks/1ll5f64md9b_a.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"mEpYvxclnQ1PvVb9xUB1M"}
