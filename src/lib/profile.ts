@@ -19,6 +19,8 @@ export const profile = {
   },
   resumeHref: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/VB_Resume.pdf`,
   resumeLabel: "VB_Resume.pdf",
+  guideHref: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/Vijay_Baskar_AI_Interview_Guide.pdf`,
+  guideLabel: "Interview guide",
   github: {
     href: "https://github.com/YoursViji/vijay-baskaran",
     label: "github.com/YoursViji/vijay-baskaran",

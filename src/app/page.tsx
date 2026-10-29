@@ -104,6 +104,18 @@ function Hero() {
               <LinkedinMark className="size-4" />
               LinkedIn
             </a>
+            <a
+              href={profile.guideHref}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "h-11 border-white/15 bg-white/4 px-4 text-sm text-zinc-100"
+              )}
+            >
+              <FileText data-icon="inline-start" />
+              Interview guide
+            </a>
           </div>
         </div>
         <div className="relative">
@@ -476,6 +488,18 @@ function Contact() {
           >
             <FileText data-icon="inline-start" />
             {profile.resumeLabel}
+          </a>
+          <a
+            href={profile.guideHref}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "h-11 border-white/15 bg-white/4 px-4 text-zinc-100"
+            )}
+          >
+            <FileText data-icon="inline-start" />
+            {profile.guideLabel}
           </a>
         </div>
         <div className="mt-8 space-y-2 text-sm text-zinc-500">

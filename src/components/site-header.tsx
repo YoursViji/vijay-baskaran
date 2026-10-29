@@ -79,6 +79,17 @@ export function SiteHeader() {
               <FileText data-icon="inline-start" />
               Resume
             </a>
+            <a
+              href={profile.guideHref}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "hidden sm:inline-flex border-white/15 bg-white/4 text-zinc-100"
+              )}
+            >
+              Interview guide
+            </a>
 
             <button
               type="button"
@@ -126,6 +137,15 @@ export function SiteHeader() {
               onClick={() => setOpen(false)}
             >
               View resume
+            </a>
+            <a
+              href={profile.guideHref}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-md px-2 py-3 text-center text-base text-zinc-200 hover:bg-white/5 hover:text-cyan-200"
+              onClick={() => setOpen(false)}
+            >
+              Interview guide
             </a>
           </nav>
         </div>
